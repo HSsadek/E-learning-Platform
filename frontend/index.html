@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Okul Sistemi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="fas fa-graduation-cap"></i> Online Okul</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showPage('home')">Ana Sayfa</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showPage('courses')">Kurslar</a>
+                    </li>
+                    <li class="nav-item d-none" id="studentNavItem">
+                        <a class="nav-link" href="#" onclick="showPage('student')">
+                            <i class="fas fa-graduation-cap"></i> Öğrenim
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav" id="authNav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showPage('login')">Giriş Yap</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showPage('register')">Kayıt Ol</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav d-none" id="userNav">
+                    <li class="nav-item d-none" id="adminNavItem">
+                        <a class="nav-link" href="#" onclick="showPage('admin')">
+                            <i class="fas fa-cog"></i> Admin Panel
+                        </a>
+                    </li>
+                    <li class="nav-item d-none" id="teacherNavItem">
+                        <a class="nav-link" href="#" onclick="showPage('teacher')">
+                            <i class="fas fa-chalkboard-teacher"></i> Öğretmen Panel
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <span id="userName"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="showPage('profile')">Profil</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()">Çıkış Yap</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Home Page -->
+        <div id="homePage" class="page">
+            <div class="hero-section text-center py-5">
+                <h1 class="display-4">Online Eğitim Sistemi</h1>
+                <p class="lead">En iyi eğitmenlerden öğrenin, kariyerinizi geliştirin</p>
+                <button class="btn btn-primary btn-lg" onclick="showPage('courses')">Kurslara Göz At</button>
+            </div>
+            
+            <div class="row mt-5">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-book fa-3x text-primary mb-3"></i>
+                            <h5>Kaliteli İçerik</h5>
+                            <p>Uzman eğitmenler tarafından hazırlanmış kaliteli kurs içerikleri</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-clock fa-3x text-primary mb-3"></i>
+                            <h5>Esnek Öğrenme</h5>
+                            <p>İstediğiniz zaman, istediğiniz yerden öğrenme imkanı</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-certificate fa-3x text-primary mb-3"></i>
+                            <h5>Sertifika</h5>
+                            <p>Kurs tamamladığınızda geçerli sertifika kazanın</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Page -->
+        <div id="loginPage" class="page d-none">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4>Giriş Yap</h4>
+                        </div>
+                        <div class="card-body">
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="loginEmail" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Şifre</label>
+                                    <input type="password" class="form-control" id="loginPassword" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Giriş Yap</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Register Page -->
+        <div id="registerPage" class="page d-none">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4>Kayıt Ol</h4>
+                        </div>
+                        <div class="card-body">
+                            <form id="registerForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Ad Soyad</label>
+                                    <input type="text" class="form-control" id="registerName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="registerEmail" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Şifre</label>
+                                    <input type="password" class="form-control" id="registerPassword" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Rol</label>
+                                    <select class="form-control" id="registerRole">
+                                        <option value="student">Öğrenci</option>
+                                        <option value="teacher">Öğretmen</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Kayıt Ol</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Courses Page -->
+        <div id="coursesPage" class="page d-none">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2>Kurslar</h2>
+                </div>
+            </div>
+            
+            <!-- Search and Filters -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="courseSearch" placeholder="Kurs ara...">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-control" id="categoryFilter">
+                        <option value="all">Tüm Kategoriler</option>
+                        <option value="Programlama">Programlama</option>
+                        <option value="Web Tasarım">Web Tasarım</option>
+                        <option value="Veri Bilimi">Veri Bilimi</option>
+                        <option value="Mobil Uygulama">Mobil Uygulama</option>
+                        <option value="Pazarlama">Pazarlama</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-control" id="levelFilter">
+                        <option value="all">Tüm Seviyeler</option>
+                        <option value="beginner">Başlangıç</option>
+                        <option value="intermediate">Orta</option>
+                        <option value="advanced">İleri</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-control" id="priceFilter">
+                        <option value="all">Tüm Fiyatlar</option>
+                        <option value="free">Ücretsiz</option>
+                        <option value="paid">Ücretli</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100" onclick="searchCourses()">
+                        <i class="fas fa-search"></i> Ara
+                    </button>
+                </div>
+            </div>
+            
+            <div id="coursesList" class="row">
+                <!-- Kurslar buraya yüklenecek -->
+            </div>
+            
+            <!-- Pagination -->
+            <div id="coursePagination" class="d-flex justify-content-center mt-4">
+                <!-- Sayfalama buraya gelecek -->
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div id="profilePage" class="page d-none">
+            <h2>Profil</h2>
+            <div id="profileContent">
+                <!-- Profil bilgileri buraya yüklenecek -->
+            </div>
+        </div>
+
+        <!-- Admin Page -->
+        <div id="adminPage" class="page d-none">
+            <div class="row">
+                <div class="col-12">
+                    <h2><i class="fas fa-cog"></i> Admin Panel</h2>
+                </div>
+            </div>
+
+            <!-- Admin Navigation Tabs -->
+            <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">
+                        <i class="fas fa-chart-bar"></i> Dashboard
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+                        <i class="fas fa-users"></i> Kullanıcılar
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="courses-tab" data-bs-toggle="tab" data-bs-target="#courses" type="button" role="tab">
+                        <i class="fas fa-book"></i> Kurs Onayları
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="announcements-tab" data-bs-toggle="tab" data-bs-target="#announcements" type="button" role="tab">
+                        <i class="fas fa-bullhorn"></i> Duyurular
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="adminTabContent">
+                <!-- Dashboard Tab -->
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="totalUsers">0</h4>
+                                            <p>Toplam Kullanıcı</p>
+                                        </div>
+                                        <i class="fas fa-users fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="totalCourses">0</h4>
+                                            <p>Aktif Kurslar</p>
+                                        </div>
+                                        <i class="fas fa-book fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="pendingCourses">0</h4>
+                                            <p>Bekleyen Kurslar</p>
+                                        </div>
+                                        <i class="fas fa-clock fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="totalRevenue">0 TL</h4>
+                                            <p>Toplam Gelir</p>
+                                        </div>
+                                        <i class="fas fa-money-bill fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Son Kayıt Olan Kullanıcılar</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="recentUsers"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Onay Bekleyen Kurslar</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="pendingCoursesList"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Tab -->
+                <div class="tab-pane fade" id="users" role="tabpanel">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="userSearch" placeholder="Kullanıcı ara...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-control" id="roleFilter">
+                                <option value="all">Tüm Roller</option>
+                                <option value="student">Öğrenci</option>
+                                <option value="teacher">Öğretmen</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary" onclick="loadUsers()">Filtrele</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Ad Soyad</th>
+                                    <th>Email</th>
+                                    <th>Rol</th>
+                                    <th>Durum</th>
+                                    <th>Kayıt Tarihi</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <!-- Kullanıcılar buraya yüklenecek -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Courses Tab -->
+                <div class="tab-pane fade" id="courses" role="tabpanel">
+                    <div id="pendingCoursesContent">
+                        <!-- Bekleyen kurslar buraya yüklenecek -->
+                    </div>
+                </div>
+
+                <!-- Announcements Tab -->
+                <div class="tab-pane fade" id="announcements" role="tabpanel">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <button class="btn btn-primary" onclick="showCreateAnnouncementModal()">
+                                <i class="fas fa-plus"></i> Yeni Duyuru
+                            </button>
+                        </div>
+                    </div>
+                    <div id="announcementsContent">
+                        <!-- Duyurular buraya yüklenecek -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher Page -->
+        <div id="teacherPage" class="page d-none">
+            <div class="row">
+                <div class="col-12">
+                    <h2><i class="fas fa-chalkboard-teacher"></i> Öğretmen Panel</h2>
+                </div>
+            </div>
+
+            <!-- Teacher Navigation Tabs -->
+            <ul class="nav nav-tabs mb-4" id="teacherTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="teacher-dashboard-tab" data-bs-toggle="tab" data-bs-target="#teacher-dashboard" type="button" role="tab">
+                        <i class="fas fa-chart-bar"></i> Dashboard
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="my-courses-tab" data-bs-toggle="tab" data-bs-target="#my-courses" type="button" role="tab">
+                        <i class="fas fa-book"></i> Kurslarım
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="create-course-tab" data-bs-toggle="tab" data-bs-target="#create-course" type="button" role="tab">
+                        <i class="fas fa-plus"></i> Yeni Kurs
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions" type="button" role="tab">
+                        <i class="fas fa-question-circle"></i> Sorular
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="earnings-tab" data-bs-toggle="tab" data-bs-target="#earnings" type="button" role="tab">
+                        <i class="fas fa-money-bill"></i> Kazançlar
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="teacherTabContent">
+                <!-- Teacher Dashboard Tab -->
+                <div class="tab-pane fade show active" id="teacher-dashboard" role="tabpanel">
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="teacherTotalCourses">0</h4>
+                                            <p>Toplam Kurslarım</p>
+                                        </div>
+                                        <i class="fas fa-book fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="teacherApprovedCourses">0</h4>
+                                            <p>Onaylı Kurslar</p>
+                                        </div>
+                                        <i class="fas fa-check fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="teacherTotalStudents">0</h4>
+                                            <p>Toplam Öğrenci</p>
+                                        </div>
+                                        <i class="fas fa-users fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="teacherTotalRevenue">0 TL</h4>
+                                            <p>Toplam Gelir</p>
+                                        </div>
+                                        <i class="fas fa-money-bill fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Cevaplanmamış Sorular</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="teacherRecentQuestions"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>En Popüler Kurslarım</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="teacherPopularCourses"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Courses Tab -->
+                <div class="tab-pane fade" id="my-courses" role="tabpanel">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <select class="form-control" id="courseStatusFilter">
+                                <option value="all">Tüm Durumlar</option>
+                                <option value="draft">Taslak</option>
+                                <option value="pending">Onay Bekliyor</option>
+                                <option value="approved">Onaylandı</option>
+                                <option value="rejected">Reddedildi</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-primary" onclick="loadTeacherCourses()">Filtrele</button>
+                        </div>
+                    </div>
+                    <div id="teacherCoursesContent">
+                        <!-- Öğretmen kursları buraya yüklenecek -->
+                    </div>
+                </div>
+
+                <!-- Create Course Tab -->
+                <div class="tab-pane fade" id="create-course" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Yeni Kurs Oluştur</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="createCourseForm">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Kurs Başlığı</label>
+                                            <input type="text" class="form-control" id="courseTitle" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Kategori</label>
+                                            <input type="text" class="form-control" id="courseCategory" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Açıklama</label>
+                                    <textarea class="form-control" id="courseDescription" rows="4" required></textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Seviye</label>
+                                            <select class="form-control" id="courseLevel" required>
+                                                <option value="beginner">Başlangıç</option>
+                                                <option value="intermediate">Orta</option>
+                                                <option value="advanced">İleri</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Süre (dakika)</label>
+                                            <input type="number" class="form-control" id="courseDuration" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Fiyat (TL)</label>
+                                            <input type="number" class="form-control" id="coursePrice" min="0" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <h6>Dersler</h6>
+                                <div id="lessonsContainer">
+                                    <div class="lesson-item border p-3 mb-3">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Ders Başlığı</label>
+                                                <input type="text" class="form-control lesson-title" required>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Süre (dk)</label>
+                                                <input type="number" class="form-control lesson-duration" required>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">İşlem</label><br>
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="removeLesson(this)">Sil</button>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <label class="form-label">İçerik</label>
+                                            <textarea class="form-control lesson-content" rows="2"></textarea>
+                                        </div>
+                                        <div class="mt-2">
+                                            <label class="form-label">Video URL (opsiyonel)</label>
+                                            <input type="url" class="form-control lesson-video">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-secondary mb-3" onclick="addLesson()">Ders Ekle</button>
+                                
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">Taslak Olarak Kaydet</button>
+                                    <button type="button" class="btn btn-success" onclick="submitCourseForApproval()">Onaya Gönder</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questions Tab -->
+                <div class="tab-pane fade" id="questions" role="tabpanel">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <select class="form-control" id="questionStatusFilter">
+                                <option value="all">Tüm Sorular</option>
+                                <option value="false">Cevaplanmamış</option>
+                                <option value="true">Cevaplanmış</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-primary" onclick="loadTeacherQuestions()">Filtrele</button>
+                        </div>
+                    </div>
+                    <div id="teacherQuestionsContent">
+                        <!-- Sorular buraya yüklenecek -->
+                    </div>
+                </div>
+
+                <!-- Earnings Tab -->
+                <div class="tab-pane fade" id="earnings" role="tabpanel">
+                    <div id="earningsContent">
+                        <!-- Kazanç bilgileri buraya yüklenecek -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Page -->
+        <div id="studentPage" class="page d-none">
+            <div class="row">
+                <div class="col-12">
+                    <h2><i class="fas fa-graduation-cap"></i> Öğrenim Paneli</h2>
+                </div>
+            </div>
+
+            <!-- Student Navigation Tabs -->
+            <ul class="nav nav-tabs mb-4" id="studentTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="student-dashboard-tab" data-bs-toggle="tab" data-bs-target="#student-dashboard" type="button" role="tab">
+                        <i class="fas fa-chart-bar"></i> Dashboard
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="my-courses-student-tab" data-bs-toggle="tab" data-bs-target="#my-courses-student" type="button" role="tab">
+                        <i class="fas fa-book"></i> Kurslarım
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="my-questions-tab" data-bs-toggle="tab" data-bs-target="#my-questions" type="button" role="tab">
+                        <i class="fas fa-question-circle"></i> Sorularım
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="my-reviews-tab" data-bs-toggle="tab" data-bs-target="#my-reviews" type="button" role="tab">
+                        <i class="fas fa-star"></i> Değerlendirmelerim
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="recommendations-tab" data-bs-toggle="tab" data-bs-target="#recommendations" type="button" role="tab">
+                        <i class="fas fa-lightbulb"></i> Öneriler
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="studentTabContent">
+                <!-- Student Dashboard Tab -->
+                <div class="tab-pane fade show active" id="student-dashboard" role="tabpanel">
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="studentTotalCourses">0</h4>
+                                            <p>Kayıtlı Kurslar</p>
+                                        </div>
+                                        <i class="fas fa-book fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="studentCompletedCourses">0</h4>
+                                            <p>Tamamlanan</p>
+                                        </div>
+                                        <i class="fas fa-check fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="studentInProgressCourses">0</h4>
+                                            <p>Devam Eden</p>
+                                        </div>
+                                        <i class="fas fa-play fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="studentTotalLessons">0</h4>
+                                            <p>Tamamlanan Ders</p>
+                                        </div>
+                                        <i class="fas fa-play-circle fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Son Erişilen Kurslar</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="studentRecentCourses"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>İlerleme Durumu</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="studentProgressOverview"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Courses Tab -->
+                <div class="tab-pane fade" id="my-courses-student" role="tabpanel">
+                    <div id="studentCoursesContent">
+                        <!-- Öğrenci kursları buraya yüklenecek -->
+                    </div>
+                </div>
+
+                <!-- My Questions Tab -->
+                <div class="tab-pane fade" id="my-questions" role="tabpanel">
+                    <div id="studentQuestionsContent">
+                        <!-- Öğrenci soruları buraya yüklenecek -->
+                    </div>
+                </div>
+
+                <!-- My Reviews Tab -->
+                <div class="tab-pane fade" id="my-reviews" role="tabpanel">
+                    <div id="studentReviewsContent">
+                        <!-- Öğrenci değerlendirmeleri buraya yüklenecek -->
+                    </div>
+                </div>
+
+                <!-- Recommendations Tab -->
+                <div class="tab-pane fade" id="recommendations" role="tabpanel">
+                    <div id="recommendationsContent">
+                        <!-- Kurs önerileri buraya yüklenecek -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Detail Page -->
+        <div id="courseDetailPage" class="page d-none">
+            <div id="courseDetailContent">
+                <!-- Kurs detayları buraya yüklenecek -->
+            </div>
+        </div>
+
+        <!-- Lesson Page -->
+        <div id="lessonPage" class="page d-none">
+            <div id="lessonContent">
+                <!-- Ders içeriği buraya yüklenecek -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- User Role Modal -->
+    <div class="modal fade" id="userRoleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Kullanıcı Rolü Değiştir</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userRoleForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="mb-3">
+                            <label class="form-label">Yeni Rol</label>
+                            <select class="form-control" id="newRole" required>
+                                <option value="student">Öğrenci</option>
+                                <option value="teacher">Öğretmen</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Güncelle</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ban User Modal -->
+    <div class="modal fade" id="banUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Kullanıcıyı Banla</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="banUserForm">
+                        <input type="hidden" id="banUserId">
+                        <div class="mb-3">
+                            <label class="form-label">Ban Sebebi</label>
+                            <textarea class="form-control" id="banReason" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger">Banla</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Approval Modal -->
+    <div class="modal fade" id="courseApprovalModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Kurs İnceleme</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="courseDetails"></div>
+                    <form id="courseApprovalForm">
+                        <input type="hidden" id="approvalCourseId">
+                        <div class="mb-3">
+                            <label class="form-label">Karar</label>
+                            <select class="form-control" id="approvalStatus" required>
+                                <option value="">Seçiniz</option>
+                                <option value="approved">Onayla</option>
+                                <option value="rejected">Reddet</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="rejectionReasonDiv" style="display: none;">
+                            <label class="form-label">Red Sebebi</label>
+                            <textarea class="form-control" id="rejectionReason" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Kaydet</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Announcement Modal -->
+    <div class="modal fade" id="announcementModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Yeni Duyuru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="announcementForm">
+                        <div class="mb-3">
+                            <label class="form-label">Başlık</label>
+                            <input type="text" class="form-control" id="announcementTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">İçerik</label>
+                            <textarea class="form-control" id="announcementContent" rows="4" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tip</label>
+                            <select class="form-control" id="announcementType">
+                                <option value="info">Bilgi</option>
+                                <option value="warning">Uyarı</option>
+                                <option value="success">Başarı</option>
+                                <option value="danger">Tehlike</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Hedef Kitle</label>
+                            <select class="form-control" id="announcementTarget">
+                                <option value="all">Herkese</option>
+                                <option value="students">Öğrencilere</option>
+                                <option value="teachers">Öğretmenlere</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Oluştur</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Modals -->
+    <!-- Edit Course Modal -->
+    <div class="modal fade" id="editCourseModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Kurs Düzenle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editCourseForm">
+                        <input type="hidden" id="editCourseId">
+                        <div class="mb-3">
+                            <label class="form-label">Açıklama</label>
+                            <textarea class="form-control" id="editCourseDescription" rows="4"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Güncelle</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Answer Question Modal -->
+    <div class="modal fade" id="answerQuestionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Soruyu Yanıtla</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="questionDetails"></div>
+                    <form id="answerQuestionForm">
+                        <input type="hidden" id="answerQuestionId">
+                        <div class="mb-3">
+                            <label class="form-label">Yanıtınız</label>
+                            <textarea class="form-control" id="questionAnswer" rows="4" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Yanıtla</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Students Modal -->
+    <div class="modal fade" id="courseStudentsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Kurs Öğrencileri</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="courseStudentsContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Announcement Modal -->
+    <div class="modal fade" id="courseAnnouncementModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Kurs Duyurusu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="courseAnnouncementForm">
+                        <input type="hidden" id="announcementCourseId">
+                        <div class="mb-3">
+                            <label class="form-label">Başlık</label>
+                            <input type="text" class="form-control" id="courseAnnouncementTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">İçerik</label>
+                            <textarea class="form-control" id="courseAnnouncementContent" rows="4" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Gönder</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Modals -->
+    <!-- Ask Question Modal -->
+    <div class="modal fade" id="askQuestionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Soru Sor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="askQuestionForm">
+                        <input type="hidden" id="questionCourseId">
+                        <input type="hidden" id="questionLessonIndex">
+                        <div class="mb-3">
+                            <label class="form-label">Soru Başlığı</label>
+                            <input type="text" class="form-control" id="questionTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Soru İçeriği</label>
+                            <textarea class="form-control" id="questionContent" rows="4" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Gönder</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Course Modal -->
+    <div class="modal fade" id="reviewCourseModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Kurs Değerlendir</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reviewCourseForm">
+                        <input type="hidden" id="reviewCourseId">
+                        <div class="mb-3">
+                            <label class="form-label">Puan</label>
+                            <div class="rating-stars">
+                                <i class="fas fa-star" data-rating="1"></i>
+                                <i class="fas fa-star" data-rating="2"></i>
+                                <i class="fas fa-star" data-rating="3"></i>
+                                <i class="fas fa-star" data-rating="4"></i>
+                                <i class="fas fa-star" data-rating="5"></i>
+                            </div>
+                            <input type="hidden" id="courseRating" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Yorumunuz</label>
+                            <textarea class="form-control" id="courseComment" rows="4" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Değerlendir</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Enrollment Confirmation Modal -->
+    <div class="modal fade" id="enrollmentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Kursa Kayıt Ol</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="enrollmentDetails"></div>
+                    <p>Bu kursa kayıt olmak istediğinizden emin misiniz?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" id="confirmEnrollment">Kayıt Ol</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/teacher.js"></script>
+    <script src="js/student.js"></script>
+</body>
+</html>

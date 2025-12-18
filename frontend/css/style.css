@@ -1,0 +1,217 @@
+/* Genel Stiller */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+    margin-bottom: 1.5rem;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.page {
+    min-height: 70vh;
+}
+
+/* Kurs Kartları */
+.course-card {
+    height: 100%;
+}
+
+.course-card .card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+.course-price {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #28a745;
+}
+
+.course-level {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.level-beginner {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.level-intermediate {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.level-advanced {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Form Stiller */
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+    
+    .hero-section p {
+        font-size: 1rem;
+    }
+}
+
+/* Loading Spinner */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Alert Stiller */
+.alert {
+    border-radius: 10px;
+    border: none;
+}
+
+/* Profil Sayfası */
+.profile-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    margin: 0 auto 1rem;
+}
+
+/* Rating Stars */
+.rating-stars {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.rating-stars i {
+    cursor: pointer;
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+.rating-stars i:hover,
+.rating-stars i.text-warning {
+    color: #ffc107 !important;
+}
+
+/* Lesson Content */
+.lesson-content {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin: 1rem 0;
+}
+
+/* Course Cards */
+.course-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.course-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Progress Bars */
+.progress {
+    height: 8px;
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+
+/* Video Container */
+.ratio {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    background: none;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: ">";
+    color: #6c757d;
+}
+
+/* Question Cards */
+.card .card-body h6 {
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+/* Star Rating Display */
+.text-warning i {
+    color: #ffc107 !important;
+}
+
+/* Lesson Navigation */
+.lesson-actions {
+    border-top: 1px solid #dee2e6;
+    padding-top: 1rem;
+}
+
+/* Course Detail Badges */
+.badge {
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}

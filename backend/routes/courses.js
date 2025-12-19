@@ -61,6 +61,9 @@ router.post('/:id/enroll', auth, async (req, res) => {
         const Course = require('../models/Course');
         const Progress = require('../models/Progress');
         const User = require('../models/User');
+        const Payment = require('../models/Payment');
+        
+        const { paymentMethod, paymentData } = req.body;
         
         const course = await Course.findById(req.params.id);
         if (!course) {
@@ -75,6 +78,21 @@ router.post('/:id/enroll', auth, async (req, res) => {
         // Zaten kayıtlı mı kontrol et
         if (course.students.includes(req.user.userId)) {
             return res.status(400).json({ message: 'Bu kursa zaten kayıtlısınız' });
+        }
+
+        // Ödeme kaydı oluştur (ücretli kurslar için)
+        let paymentRecord = null;
+        if (course.price > 0) {
+            paymentRecord = new Payment({
+                user: req.user.userId,
+                course: course._id,
+                amount: course.price,
+                method: paymentMethod,
+                status: paymentMethod === 'bank-transfer' ? 'pending' : 'completed',
+                paymentData: paymentData,
+                createdAt: new Date()
+            });
+            await paymentRecord.save();
         }
 
         // Kursa kayıt ol
@@ -96,7 +114,18 @@ router.post('/:id/enroll', auth, async (req, res) => {
         });
         await progress.save();
 
-        res.json({ message: 'Kursa başarıyla kayıt oldunuz' });
+        let message = 'Kursa başarıyla kayıt oldunuz';
+        if (paymentMethod === 'bank-transfer') {
+            message = 'Kayıt işleminiz alındı. Havale/EFT işlemi sonrası dekont göndermeyi unutmayın.';
+        } else if (paymentMethod === 'credit-card') {
+            message = 'Ödeme başarılı! Kursa başarıyla kayıt oldunuz.';
+        }
+
+        res.json({ 
+            message,
+            paymentId: paymentRecord?._id,
+            enrollmentStatus: paymentMethod === 'bank-transfer' ? 'pending_payment' : 'active'
+        });
     } catch (error) {
         res.status(500).json({ message: 'Sunucu hatası', error: error.message });
     }

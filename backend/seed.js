@@ -66,6 +66,16 @@ const seedData = async () => {
                 email: 'ali@test.com',
                 password: hashedPassword,
                 role: 'student'
+            },
+            {
+                name: 'Zeynep Kara',
+                email: 'zeynep@test.com',
+                password: hashedPassword,
+                role: 'pending_teacher',
+                teacherApplication: {
+                    status: 'pending',
+                    appliedAt: new Date()
+                }
             }
         ]);
 
@@ -469,6 +479,7 @@ const seedData = async () => {
         console.log('1 taslak kurs var (Vue.js)');
         console.log('1 reddedilmiş kurs var (MongoDB)');
         console.log('4 kurs değerlendirmesi var');
+        console.log('1 öğretmen başvurusu bekliyor (Zeynep Kara)');
 
     } catch (error) {
         console.error('Seed işlemi sırasında hata:', error);

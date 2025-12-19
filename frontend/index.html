@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Online Okul Sistemi</title>
+    <meta name="description" content="Modern online eğitim platformu - Kaliteli kurslar, uzman eğitmenler">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
 </head>
 <body>
     <!-- Navigation -->
@@ -50,12 +53,22 @@
                         </a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-2"></i>
                             <span id="userName"></span>
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" onclick="showPage('profile')">Profil</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="logout()">Çıkış Yap</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="showPage('profile')">
+                                    <i class="fas fa-user"></i> Profil
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="#" onclick="logout()">
+                                    <i class="fas fa-sign-out-alt"></i> Çıkış Yap
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
@@ -67,37 +80,104 @@
     <div class="container mt-4">
         <!-- Home Page -->
         <div id="homePage" class="page">
-            <div class="hero-section text-center py-5">
-                <h1 class="display-4">Online Eğitim Sistemi</h1>
-                <p class="lead">En iyi eğitmenlerden öğrenin, kariyerinizi geliştirin</p>
-                <button class="btn btn-primary btn-lg" onclick="showPage('courses')">Kurslara Göz At</button>
+            <div class="hero-section text-center">
+                <div class="container">
+                    <h1 class="display-4 mb-4">
+                        <i class="fas fa-graduation-cap me-3"></i>
+                        Online Eğitim Sistemi
+                    </h1>
+                    <p class="lead mb-4">En iyi eğitmenlerden öğrenin, kariyerinizi geliştirin</p>
+                    <div class="d-flex justify-content-center gap-3 flex-wrap" id="homePageButtons">
+                        <button class="btn btn-light btn-lg px-4" onclick="showPage('courses')">
+                            <i class="fas fa-search me-2"></i>Kurslara Göz At
+                        </button>
+                        <button class="btn btn-outline-light btn-lg px-4" id="registerButton" onclick="showPage('register')">
+                            <i class="fas fa-user-plus me-2"></i>Hemen Başla
+                        </button>
+                    </div>
+                </div>
             </div>
             
-            <div class="row mt-5">
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <i class="fas fa-book fa-3x text-primary mb-3"></i>
-                            <h5>Kaliteli İçerik</h5>
-                            <p>Uzman eğitmenler tarafından hazırlanmış kaliteli kurs içerikleri</p>
+            <!-- Stats Section -->
+            <div class="row mb-5">
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <div class="display-6 text-primary mb-2">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h4 class="text-primary">1000+</h4>
+                            <p class="text-muted">Aktif Öğrenci</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <i class="fas fa-clock fa-3x text-primary mb-3"></i>
-                            <h5>Esnek Öğrenme</h5>
-                            <p>İstediğiniz zaman, istediğiniz yerden öğrenme imkanı</p>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <div class="display-6 text-success mb-2">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <h4 class="text-success">50+</h4>
+                            <p class="text-muted">Uzman Eğitmen</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card">
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <div class="display-6 text-warning mb-2">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            <h4 class="text-warning">200+</h4>
+                            <p class="text-muted">Kaliteli Kurs</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <div class="display-6 text-info mb-2">
+                                <i class="fas fa-certificate"></i>
+                            </div>
+                            <h4 class="text-info">5000+</h4>
+                            <p class="text-muted">Verilen Sertifika</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Features Section -->
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
                         <div class="card-body text-center">
-                            <i class="fas fa-certificate fa-3x text-primary mb-3"></i>
-                            <h5>Sertifika</h5>
-                            <p>Kurs tamamladığınızda geçerli sertifika kazanın</p>
+                            <div class="mb-3">
+                                <i class="fas fa-book fa-3x text-primary"></i>
+                            </div>
+                            <h5 class="card-title">Kaliteli İçerik</h5>
+                            <p class="card-text">Uzman eğitmenler tarafından hazırlanmış, güncel ve kapsamlı kurs içerikleri</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-clock fa-3x text-success"></i>
+                            </div>
+                            <h5 class="card-title">Esnek Öğrenme</h5>
+                            <p class="card-text">7/24 erişim imkanı ile istediğiniz zaman, istediğiniz yerden öğrenme özgürlüğü</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-certificate fa-3x text-warning"></i>
+                            </div>
+                            <h5 class="card-title">Sertifika</h5>
+                            <p class="card-text">Kurs tamamladığınızda geçerli ve tanınmış dijital sertifika kazanın</p>
                         </div>
                     </div>
                 </div>
@@ -110,19 +190,45 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-header">
-                            <h4>Giriş Yap</h4>
+                            <h4><i class="fas fa-sign-in-alt me-2"></i>Giriş Yap</h4>
                         </div>
                         <div class="card-body">
                             <form id="loginForm">
                                 <div class="mb-3">
                                     <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="loginEmail" required>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-envelope"></i>
+                                        </span>
+                                        <input type="email" class="form-control" id="loginEmail" placeholder="email@example.com" required autocomplete="email">
+                                    </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Şifre</label>
-                                    <input type="password" class="form-control" id="loginPassword" required>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-lock"></i>
+                                        </span>
+                                        <input type="password" class="form-control" id="loginPassword" placeholder="Şifrenizi girin" required autocomplete="current-password">
+                                        <button class="btn btn-outline-secondary" type="button" id="toggleLoginPassword">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                <button type="submit" class="btn btn-primary w-100">Giriş Yap</button>
+                                <div class="mb-3 text-end">
+                                    <a href="#" class="text-decoration-none" onclick="showPage('forgotPassword')">
+                                        <i class="fas fa-key me-1"></i>Şifremi Unuttum
+                                    </a>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 mb-3">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Giriş Yap
+                                </button>
+                                <div class="text-center">
+                                    <span class="text-muted">Hesabınız yok mu? </span>
+                                    <a href="#" class="text-decoration-none" onclick="showPage('register')">
+                                        Kayıt Ol
+                                    </a>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -136,30 +242,108 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-header">
-                            <h4>Kayıt Ol</h4>
+                            <h4><i class="fas fa-user-plus me-2"></i>Kayıt Ol</h4>
                         </div>
                         <div class="card-body">
                             <form id="registerForm">
                                 <div class="mb-3">
                                     <label class="form-label">Ad Soyad</label>
-                                    <input type="text" class="form-control" id="registerName" required>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-user"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="registerName" placeholder="Adınız ve soyadınız" required autocomplete="name">
+                                    </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="registerEmail" required>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-envelope"></i>
+                                        </span>
+                                        <input type="email" class="form-control" id="registerEmail" placeholder="email@example.com" required autocomplete="email">
+                                    </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Şifre</label>
-                                    <input type="password" class="form-control" id="registerPassword" required>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-lock"></i>
+                                        </span>
+                                        <input type="password" class="form-control" id="registerPassword" placeholder="En az 6 karakter" required autocomplete="new-password" minlength="6">
+                                        <button class="btn btn-outline-secondary" type="button" id="toggleRegisterPassword">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text">Şifreniz en az 6 karakter olmalıdır.</div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Rol</label>
-                                    <select class="form-control" id="registerRole">
-                                        <option value="student">Öğrenci</option>
-                                        <option value="teacher">Öğretmen</option>
-                                    </select>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-user-tag"></i>
+                                        </span>
+                                        <select class="form-select" id="registerRole" onchange="toggleTeacherFields()">
+                                            <option value="student">Öğrenci</option>
+                                            <option value="teacher">Öğretmen (Admin Onayı Gerekir)</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <button type="submit" class="btn btn-primary w-100">Kayıt Ol</button>
+                                
+                                <!-- Öğretmen Başvuru Uyarısı -->
+                                <div id="teacherFields" class="d-none">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Öğretmen Başvurusu:</strong> Kayıt olduktan sonra öğretmen başvurunuz admin tarafından incelenecektir. Onay sürecinde öğrenci yetkileriniz ile sistemi kullanabilirsiniz.
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 mb-3">
+                                    <i class="fas fa-user-plus me-2"></i>Kayıt Ol
+                                </button>
+                                <div class="text-center">
+                                    <span class="text-muted">Zaten hesabınız var mı? </span>
+                                    <a href="#" class="text-decoration-none" onclick="showPage('login')">
+                                        Giriş Yap
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forgot Password Page -->
+        <div id="forgotPasswordPage" class="page d-none">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4><i class="fas fa-key me-2"></i>Şifremi Unuttum</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Email adresinizi girin, size yeni şifre gönderelim.
+                            </div>
+                            <form id="forgotPasswordForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Email Adresiniz</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-envelope"></i>
+                                        </span>
+                                        <input type="email" class="form-control" id="forgotEmail" placeholder="Kayıtlı email adresiniz" required autocomplete="email">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 mb-3">
+                                    <i class="fas fa-paper-plane me-2"></i>Yeni Şifre Gönder
+                                </button>
+                                <div class="text-center">
+                                    <a href="#" class="text-decoration-none" onclick="showPage('login')">
+                                        <i class="fas fa-arrow-left me-1"></i>Giriş sayfasına dön
+                                    </a>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -224,11 +408,268 @@
 
         <!-- Profile Page -->
         <div id="profilePage" class="page d-none">
-            <h2>Profil</h2>
-            <div id="profileContent">
-                <!-- Profil bilgileri buraya yüklenecek -->
+            <div class="row">
+                <div class="col-12">
+                    <h2><i class="fas fa-user me-2"></i>Profil Ayarları</h2>
+                </div>
             </div>
-        </div>
+
+            <!-- Profile Navigation Tabs -->
+            <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="profile-info-tab" data-bs-toggle="tab" data-bs-target="#profile-info" type="button" role="tab">
+                        <i class="fas fa-user"></i> Genel Bilgiler
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="profile-image-tab" data-bs-toggle="tab" data-bs-target="#profile-image" type="button" role="tab">
+                        <i class="fas fa-camera"></i> Profil Resmi
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="profile-security-tab" data-bs-toggle="tab" data-bs-target="#profile-security" type="button" role="tab">
+                        <i class="fas fa-shield-alt"></i> Güvenlik
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="profile-social-tab" data-bs-toggle="tab" data-bs-target="#profile-social" type="button" role="tab">
+                        <i class="fas fa-share-alt"></i> Sosyal Medya
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="profileTabContent">
+                <!-- General Info Tab -->
+                <div class="tab-pane fade show active" id="profile-info" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-edit me-2"></i>Kişisel Bilgiler</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="profileInfoForm">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Ad Soyad</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                                        <input type="text" class="form-control" id="profileName" required>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Email</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                                        <input type="email" class="form-control" id="profileEmail" readonly>
+                                                    </div>
+                                                    <div class="form-text">
+                                                        <i class="fas fa-info-circle me-1"></i>
+                                                        Email adresi güvenlik nedeniyle değiştirilemez.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Telefon</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                                        <input type="tel" class="form-control" id="profilePhone">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Konum</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                                                        <input type="text" class="form-control" id="profileLocation">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Website</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-globe"></i></span>
+                                                <input type="url" class="form-control" id="profileWebsite">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Hakkımda</label>
+                                            <textarea class="form-control" id="profileBio" rows="4" maxlength="500" placeholder="Kendiniz hakkında kısa bir açıklama yazın..."></textarea>
+                                            <div class="form-text">Maksimum 500 karakter</div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-2"></i>Bilgileri Kaydet
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-info-circle me-2"></i>Profil Özeti</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    <div id="profilePreview">
+                                        <!-- Profil önizlemesi buraya gelecek -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Image Tab -->
+                <div class="tab-pane fade" id="profile-image" role="tabpanel">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-camera me-2"></i>Profil Resmi</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    <div class="profile-image-container mb-4">
+                                        <div id="currentProfileImage" class="profile-image-large">
+                                            <!-- Mevcut profil resmi buraya gelecek -->
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Profil Resmi Seç</label>
+                                        <div class="input-group">
+                                            <input type="file" class="form-control" id="profileImageFile" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" onchange="previewSelectedImage(this)">
+                                            <button class="btn btn-outline-primary" type="button" onclick="document.getElementById('profileImageFile').click()">
+                                                <i class="fas fa-folder-open me-1"></i> Dosya Seç
+                                            </button>
+                                        </div>
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Maksimum dosya boyutu: 5MB. Desteklenen formatlar: JPG, PNG, GIF, WebP
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-success" onclick="uploadProfileImage()" id="uploadBtn" disabled>
+                                            <i class="fas fa-upload me-2"></i>Resmi Yükle
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteProfileImage()" id="deleteBtn">
+                                            <i class="fas fa-trash me-2"></i>Resmi Sil
+                                        </button>
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                <i class="fas fa-lightbulb me-1"></i>
+                                                <strong>İpucu:</strong> En iyi sonuç için kare (1:1) oranında resim kullanın.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Tab -->
+                <div class="tab-pane fade" id="profile-security" role="tabpanel">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-key me-2"></i>Şifre Değiştir</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="changePasswordForm">
+                                        <div class="mb-3">
+                                            <label class="form-label">Mevcut Şifre</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                                <input type="password" class="form-control" id="currentPassword" required>
+                                                <button class="btn btn-outline-secondary" type="button" id="toggleCurrentPassword">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Yeni Şifre</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                                <input type="password" class="form-control" id="newPassword" required minlength="6">
+                                                <button class="btn btn-outline-secondary" type="button" id="toggleNewPassword">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Yeni Şifre Tekrar</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                                <input type="password" class="form-control" id="confirmNewPassword" required minlength="6">
+                                                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="passwordStrengthIndicator" class="mb-3"></div>
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-shield-alt me-2"></i>Şifreyi Değiştir
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Media Tab -->
+                <div class="tab-pane fade" id="profile-social" role="tabpanel">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-share-alt me-2"></i>Sosyal Medya Hesapları</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="socialLinksForm">
+                                        <div class="mb-3">
+                                            <label class="form-label">Twitter</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fab fa-twitter"></i></span>
+                                                <input type="url" class="form-control" id="twitterLink" placeholder="https://twitter.com/username">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">LinkedIn</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fab fa-linkedin"></i></span>
+                                                <input type="url" class="form-control" id="linkedinLink" placeholder="https://linkedin.com/in/username">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">GitHub</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fab fa-github"></i></span>
+                                                <input type="url" class="form-control" id="githubLink" placeholder="https://github.com/username">
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-save me-2"></i>Sosyal Medya Linklerini Kaydet
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>""
 
         <!-- Admin Page -->
         <div id="adminPage" class="page d-none">
@@ -253,6 +694,11 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="courses-tab" data-bs-toggle="tab" data-bs-target="#courses" type="button" role="tab">
                         <i class="fas fa-book"></i> Kurs Onayları
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="teacher-applications-tab" data-bs-toggle="tab" data-bs-target="#teacher-applications" type="button" role="tab">
+                        <i class="fas fa-chalkboard-teacher"></i> Öğretmen Başvuruları
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -308,6 +754,19 @@
                         </div>
                         <div class="col-md-3">
                             <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="pendingTeachers">0</h4>
+                                            <p>Bekleyen Öğretmen</p>
+                                        </div>
+                                        <i class="fas fa-user-clock fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
@@ -386,6 +845,13 @@
                 <div class="tab-pane fade" id="courses" role="tabpanel">
                     <div id="pendingCoursesContent">
                         <!-- Bekleyen kurslar buraya yüklenecek -->
+                    </div>
+                </div>
+
+                <!-- Teacher Applications Tab -->
+                <div class="tab-pane fade" id="teacher-applications" role="tabpanel">
+                    <div id="teacherApplicationsContent">
+                        <!-- Öğretmen başvuruları buraya yüklenecek -->
                     </div>
                 </div>
 
@@ -1037,6 +1503,115 @@
         </div>
     </div>
 
+    <!-- Teacher Application Review Modal -->
+    <div class="modal fade" id="teacherApplicationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Öğretmen Başvurusu İnceleme</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="teacherApplicationDetails"></div>
+                    <form id="teacherApplicationForm">
+                        <input type="hidden" id="applicationUserId">
+                        <div class="mb-3">
+                            <label class="form-label">Karar</label>
+                            <select class="form-control" id="applicationStatus" required>
+                                <option value="">Seçiniz</option>
+                                <option value="approved">Onayla</option>
+                                <option value="rejected">Reddet</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="applicationRejectionDiv" style="display: none;">
+                            <label class="form-label">Red Sebebi</label>
+                            <textarea class="form-control" id="applicationRejectionReason" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Kaydet</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Approval Confirmation Modal -->
+    <div class="modal fade" id="teacherApprovalModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-check-circle me-2"></i>Öğretmen Başvurusunu Onayla
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-user-check fa-3x text-success mb-3"></i>
+                        <h6 id="approvalTeacherName"></h6>
+                        <p class="text-muted">Bu öğretmen başvurusunu onaylamak istediğinizden emin misiniz?</p>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Onaylandıktan sonra:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Kullanıcı öğretmen yetkilerine sahip olacak</li>
+                            <li>Kurs oluşturabilecek ve yönetebilecek</li>
+                            <li>Email bildirimi gönderilecek</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>İptal
+                    </button>
+                    <button type="button" class="btn btn-success" id="confirmApprovalBtn">
+                        <i class="fas fa-check me-2"></i>Onayla
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Rejection Modal -->
+    <div class="modal fade" id="teacherRejectionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-times-circle me-2"></i>Öğretmen Başvurusunu Reddet
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-user-times fa-3x text-danger mb-3"></i>
+                        <h6 id="rejectionTeacherName"></h6>
+                    </div>
+                    <form id="rejectionForm">
+                        <div class="mb-3">
+                            <label class="form-label">Red Sebebi <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="rejectionReasonText" rows="4" 
+                                      placeholder="Başvurunun neden reddedildiğini açıklayın..." required></textarea>
+                            <div class="form-text">Bu mesaj başvuru sahibine email ile gönderilecektir.</div>
+                        </div>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Dikkat:</strong> Bu işlem geri alınamaz. Kullanıcı tekrar başvuru yapabilir.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>İptal
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmRejectionBtn">
+                        <i class="fas fa-ban me-2"></i>Reddet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Student Modals -->
     <!-- Ask Question Modal -->
     <div class="modal fade" id="askQuestionModal" tabindex="-1">
@@ -1098,9 +1673,9 @@
         </div>
     </div>
 
-    <!-- Course Enrollment Confirmation Modal -->
+    <!-- Course Enrollment Modal -->
     <div class="modal fade" id="enrollmentModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg"></div>
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Kursa Kayıt Ol</h5>
@@ -1108,20 +1683,363 @@
                 </div>
                 <div class="modal-body">
                     <div id="enrollmentDetails"></div>
-                    <p>Bu kursa kayıt olmak istediğinizden emin misiniz?</p>
+                    
+                    <!-- Ödeme Seçenekleri -->
+                    <div id="paymentSection" class="mt-4" style="display: none;">
+                        <h6 class="mb-3">Ödeme Yöntemi Seçin</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card payment-method" onclick="selectPaymentMethod('credit-card')">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-credit-card fa-2x text-primary mb-2"></i>
+                                        <h6>Kredi Kartı</h6>
+                                        <small class="text-muted">Visa, MasterCard, American Express</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card payment-method" onclick="selectPaymentMethod('bank-transfer')">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-university fa-2x text-success mb-2"></i>
+                                        <h6>Banka Havalesi</h6>
+                                        <small class="text-muted">EFT/Havale ile ödeme</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Kredi Kartı Formu -->
+                        <div id="creditCardForm" class="payment-form" style="display: none;">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-credit-card me-2"></i>Kredi Kartı Bilgileri</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form id="paymentForm">
+                                        <div class="row">
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label">Kart Üzerindeki İsim</label>
+                                                <input type="text" class="form-control" id="cardName" placeholder="Ad Soyad" required>
+                                            </div>
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label">Kart Numarası</label>
+                                                <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Son Kullanma Tarihi</label>
+                                                <input type="text" class="form-control" id="cardExpiry" placeholder="MM/YY" maxlength="5" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">CVV</label>
+                                                <input type="text" class="form-control" id="cardCvv" placeholder="123" maxlength="3" required>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Banka Havalesi Bilgileri -->
+                        <div id="bankTransferForm" class="payment-form" style="display: none;">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-university me-2"></i>Banka Havale Bilgileri</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <h6>Ödeme Bilgileri:</h6>
+                                        <p class="mb-1"><strong>Banka:</strong> Türkiye İş Bankası</p>
+                                        <p class="mb-1"><strong>Hesap Sahibi:</strong> Online Eğitim Sistemi Ltd. Şti.</p>
+                                        <p class="mb-1"><strong>IBAN:</strong> TR12 0006 4000 0011 2345 6789 01</p>
+                                        <p class="mb-0"><strong>Açıklama:</strong> <span id="transferDescription"></span></p>
+                                    </div>
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        Havale/EFT işlemi sonrası dekont fotoğrafını <strong>destek@onlineegitim.com</strong> adresine gönderiniz.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                    <button type="button" class="btn btn-primary" id="confirmEnrollment">Kayıt Ol</button>
+                    <button type="button" class="btn btn-success" id="freeEnrollBtn" style="display: none;">
+                        <i class="fas fa-check me-2"></i>Ücretsiz Kayıt Ol
+                    </button>
+                    <button type="button" class="btn btn-primary" id="paymentBtn" style="display: none;">
+                        <i class="fas fa-credit-card me-2"></i>Ödemeyi Tamamla
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Admin Page -->
+    <div id="adminPage" class="page d-none">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="fas fa-cog me-2"></i>Admin Panel</h2>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-primary" onclick="loadAdminDashboard()">
+                                <i class="fas fa-sync-alt me-1"></i>Yenile
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Stats -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="totalUsers">0</h4>
+                                            <p class="mb-0">Toplam Kullanıcı</p>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-users fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="totalCourses">0</h4>
+                                            <p class="mb-0">Toplam Kurs</p>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-book fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="pendingCourses">0</h4>
+                                            <p class="mb-0">Bekleyen Kurs</p>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-clock fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="pendingTeachers">0</h4>
+                                            <p class="mb-0">Bekleyen Öğretmen</p>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-user-plus fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Tabs -->
+                    <ul class="nav nav-tabs" id="adminTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+                                <i class="fas fa-users me-1"></i>Kullanıcılar
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="courses-tab" data-bs-toggle="tab" data-bs-target="#courses" type="button" role="tab">
+                                <i class="fas fa-book me-1"></i>Kurslar
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pending-courses-tab" data-bs-toggle="tab" data-bs-target="#pending-courses" type="button" role="tab">
+                                <i class="fas fa-clock me-1"></i>Bekleyen Kurslar
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="teacher-applications-tab" data-bs-toggle="tab" data-bs-target="#teacher-applications" type="button" role="tab">
+                                <i class="fas fa-user-plus me-1"></i>Öğretmen Başvuruları
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="adminTabContent">
+                        <!-- Users Tab -->
+                        <div class="tab-pane fade show active" id="users" role="tabpanel">
+                            <div class="card mt-3">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Kullanıcı Yönetimi</h5>
+                                    <button class="btn btn-primary btn-sm" onclick="loadUsers()">
+                                        <i class="fas fa-sync-alt me-1"></i>Yenile
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th style="width: 25%;">Ad Soyad</th>
+                                                    <th style="width: 25%;">Email</th>
+                                                    <th style="width: 15%;">Rol</th>
+                                                    <th style="width: 10%;">Durum</th>
+                                                    <th style="width: 10%;">Kayıt Tarihi</th>
+                                                    <th style="width: 15%;">İşlemler</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="usersTableBody">
+                                                <tr>
+                                                    <td colspan="6" class="text-center py-4">
+                                                        <div class="spinner-border text-primary" role="status">
+                                                            <span class="visually-hidden">Yükleniyor...</span>
+                                                        </div>
+                                                        <p class="mt-2 mb-0">Kullanıcılar yükleniyor...</p>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Courses Tab -->
+                        <div class="tab-pane fade" id="courses" role="tabpanel">
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Kurs Yönetimi</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="adminCoursesContent">
+                                        <!-- Kurslar buraya yüklenecek -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pending Courses Tab -->
+                        <div class="tab-pane fade" id="pending-courses" role="tabpanel">
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Onay Bekleyen Kurslar</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="pendingCoursesContent">
+                                        <!-- Bekleyen kurslar buraya yüklenecek -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Teacher Applications Tab -->
+                        <div class="tab-pane fade" id="teacher-applications" role="tabpanel">
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Öğretmen Başvuruları</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="teacherApplicationsContent">
+                                        <!-- Öğretmen başvuruları buraya yüklenecek -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modals -->
+    <!-- User Role Modal -->
+    <div class="modal fade" id="userRoleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Kullanıcı Rolü Değiştir</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userRoleForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="mb-3">
+                            <label class="form-label">Yeni Rol</label>
+                            <select class="form-control" id="newRole" required>
+                                <option value="student">Öğrenci</option>
+                                <option value="teacher">Öğretmen</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Güncelle</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Approval Modal -->
+    <div class="modal fade" id="courseApprovalModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Kurs Onaylama</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="courseApprovalDetails"></div>
+                    <form id="courseApprovalForm">
+                        <input type="hidden" id="approvalCourseId">
+                        <div class="mb-3">
+                            <label class="form-label">Karar</label>
+                            <select class="form-control" id="approvalStatus" required>
+                                <option value="">Seçiniz</option>
+                                <option value="approved">Onayla</option>
+                                <option value="rejected">Reddet</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="rejectionReasonDiv" style="display: none;">
+                            <label class="form-label">Red Sebebi</label>
+                            <textarea class="form-control" id="rejectionReason" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Kaydet</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay d-none">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p class="mt-3">Yükleniyor...</p>
+        </div>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollToTop" class="scroll-to-top" onclick="scrollToTop()">
+        <i class="fas fa-chevron-up"></i>
+    </button>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/app.js"></script>
     <script src="js/admin.js"></script>
     <script src="js/teacher.js"></script>
     <script src="js/student.js"></script>
+    <script src="js/modern.js"></script>
 </body>
 </html>

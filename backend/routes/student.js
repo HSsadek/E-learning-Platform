@@ -246,6 +246,7 @@ router.get('/search', async (req, res) => {
 
         const courses = await Course.find(query)
             .populate('instructor', 'name email')
+            .populate('students', '_id') // Öğrenci ID'lerini de getir
             .select('-lessons') // Ders içeriklerini gizle
             .sort({ createdAt: -1 })
             .limit(limit * 1)

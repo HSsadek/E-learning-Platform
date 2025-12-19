@@ -7,6 +7,8 @@ const adminAuth = require('../middleware/adminAuth');
 
 const router = express.Router();
 
+console.log('🚀 Admin routes yüklendi!'); // Debug
+
 // Dashboard istatistikleri
 router.get('/dashboard', adminAuth, async (req, res) => {
     try {
@@ -20,6 +22,9 @@ router.get('/dashboard', adminAuth, async (req, res) => {
             { $group: { _id: null, total: { $sum: { $multiply: ['$price', { $size: '$students' }] } } } }
         ]);
 
+        // Bekleyen öğretmen başvuruları
+        const pendingTeachers = await User.countDocuments({ role: 'pending_teacher' });
+
         // Son aktiviteler
         const recentUsers = await User.find()
             .sort({ createdAt: -1 })
@@ -31,6 +36,12 @@ router.get('/dashboard', adminAuth, async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(5);
 
+        // Bekleyen öğretmen başvuruları
+        const recentTeacherApplications = await User.find({ role: 'pending_teacher' })
+            .sort({ 'teacherApplication.appliedAt': -1 })
+            .limit(5)
+            .select('name email teacherApplication');
+
         res.json({
             stats: {
                 totalUsers,
@@ -38,14 +49,44 @@ router.get('/dashboard', adminAuth, async (req, res) => {
                 totalTeachers,
                 totalCourses,
                 pendingCourses,
+                pendingTeachers,
                 totalRevenue: totalRevenue[0]?.total || 0
             },
             recentActivities: {
                 recentUsers,
-                recentCourses
+                recentCourses,
+                recentTeacherApplications
             }
         });
     } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
+// Test route (auth olmadan) - en üstte
+router.get('/test-simple', (req, res) => {
+    console.log('🧪 Simple test route çağrıldı!');
+    res.json({ message: 'Simple test başarılı!' });
+});
+
+// Belirli bir kullanıcıyı getir
+router.get('/users/:id', (req, res, next) => {
+    console.log('🔍 Admin users/:id route HIT! ID:', req.params.id);
+    next();
+}, adminAuth, async (req, res) => {
+    try {
+        console.log('✅ AdminAuth geçildi, kullanıcı araniyor, ID:', req.params.id);
+        const user = await User.findById(req.params.id).select('-password');
+        
+        if (!user) {
+            console.log('❌ Kullanıcı bulunamadı, ID:', req.params.id);
+            return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+        }
+        
+        console.log('✅ Kullanıcı bulundu:', user.name);
+        res.json(user);
+    } catch (error) {
+        console.error('💥 Admin users/:id hatası:', error);
         res.status(500).json({ message: 'Sunucu hatası', error: error.message });
     }
 });
@@ -286,6 +327,67 @@ router.delete('/announcements/:id', adminAuth, async (req, res) => {
         }
         
         res.json({ message: 'Duyuru silindi' });
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
+// Bekleyen öğretmen başvurularını listele
+router.get('/teacher-applications', adminAuth, async (req, res) => {
+    try {
+        const applications = await User.find({ role: 'pending_teacher' })
+            .sort({ 'teacherApplication.appliedAt': -1 })
+            .select('name email teacherApplication createdAt');
+
+        res.json(applications);
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
+// Öğretmen başvurusunu onayla/reddet
+router.put('/teacher-applications/:id/review', adminAuth, async (req, res) => {
+    try {
+        const { status, rejectionReason } = req.body;
+        
+        if (!['approved', 'rejected'].includes(status)) {
+            return res.status(400).json({ message: 'Geçersiz durum' });
+        }
+
+        const user = await User.findById(req.params.id);
+        
+        if (!user || user.role !== 'pending_teacher') {
+            return res.status(404).json({ message: 'Bekleyen öğretmen başvurusu bulunamadı' });
+        }
+
+        // Başvuru durumunu güncelle
+        user.teacherApplication.status = status;
+        user.teacherApplication.reviewedAt = new Date();
+        user.teacherApplication.reviewedBy = req.user.userId;
+        
+        if (status === 'approved') {
+            user.role = 'teacher';
+        } else {
+            user.teacherApplication.rejectionReason = rejectionReason;
+            // Reddedilen başvuru için role'ü student yap
+            user.role = 'student';
+        }
+
+        await user.save();
+
+        res.json({ 
+            message: status === 'approved' ? 
+                'Öğretmen başvurusu onaylandı. Kullanıcının yeniden giriş yapması gerekiyor.' : 
+                'Öğretmen başvurusu reddedildi',
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                teacherApplication: user.teacherApplication
+            },
+            requireRelogin: status === 'approved' // Frontend'e yeniden giriş gerektiğini bildir
+        });
     } catch (error) {
         res.status(500).json({ message: 'Sunucu hatası', error: error.message });
     }

@@ -280,7 +280,7 @@ function displayCourseDetail(data) {
                                 </button>
                             ` : ''}
                         ` : currentUser ? `
-                            <button class="btn btn-primary btn-lg w-100" onclick="confirmEnrollment('${course._id}', '${course.title}', ${course.price})">
+                            <button class="btn btn-primary btn-lg w-100" onclick="enrollCourse('${course._id}')">
                                 <i class="fas fa-plus"></i> Kursa Kayıt Ol
                             </button>
                         ` : `
@@ -623,16 +623,8 @@ document.getElementById('reviewCourseForm').addEventListener('submit', async (e)
     }
 });
 
-// Kayıt onayı
-function confirmEnrollment(courseId, courseTitle, price) {
-    document.getElementById('enrollmentDetails').innerHTML = `
-        <h6>${courseTitle}</h6>
-        <p><strong>Fiyat:</strong> ${price === 0 ? 'Ücretsiz' : price + ' TL'}</p>
-    `;
-    
-    document.getElementById('confirmEnrollment').onclick = () => enrollCourse(courseId);
-    new bootstrap.Modal(document.getElementById('enrollmentModal')).show();
-}
+// Kayıt onayı - Yeni ödeme sistemi kullanılıyor (app.js'de)
+// Bu fonksiyon artık kullanılmıyor, app.js'deki enrollCourse fonksiyonu kullanılıyor
 
 // Öğrenci sorularını yükle
 async function loadStudentQuestions() {

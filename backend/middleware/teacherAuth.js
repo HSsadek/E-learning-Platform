@@ -10,9 +10,9 @@ const teacherAuth = (req, res, next) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Öğretmen veya admin kontrolü
+        // Öğretmen veya admin kontrolü (pending_teacher erişemez)
         if (decoded.role !== 'teacher' && decoded.role !== 'admin') {
-            return res.status(403).json({ message: 'Bu işlem için öğretmen yetkisi gereklidir.' });
+            return res.status(403).json({ message: 'Bu işlem için onaylanmış öğretmen yetkisi gereklidir.' });
         }
         
         req.user = decoded;

@@ -1,6 +1,8 @@
+// Admin fonksiyonları - authToken global değişkenini kullanır
+
 // Admin Dashboard yükleme
 async function loadAdminDashboard() {
-    if (!authToken || currentUser.role !== 'admin') {
+    if (!authToken || !currentUser || currentUser.role !== 'admin') {
         showAlert('Admin yetkisi gereklidir!', 'danger');
         return;
     }
@@ -17,6 +19,9 @@ async function loadAdminDashboard() {
             updateDashboardStats(data.stats);
             updateRecentActivities(data.recentActivities);
         }
+        
+        // Kullanıcıları da yükle
+        loadUsers();
     } catch (error) {
         console.error('Dashboard yüklenirken hata:', error);
     }
@@ -27,6 +32,7 @@ function updateDashboardStats(stats) {
     document.getElementById('totalUsers').textContent = stats.totalUsers;
     document.getElementById('totalCourses').textContent = stats.totalCourses;
     document.getElementById('pendingCourses').textContent = stats.pendingCourses;
+    document.getElementById('pendingTeachers').textContent = stats.pendingTeachers || 0;
     document.getElementById('totalRevenue').textContent = stats.totalRevenue + ' TL';
 }
 
@@ -65,15 +71,8 @@ function updateRecentActivities(activities) {
 
 // Kullanıcıları yükle
 async function loadUsers() {
-    const search = document.getElementById('userSearch').value;
-    const role = document.getElementById('roleFilter').value;
-
     try {
-        const params = new URLSearchParams();
-        if (search) params.append('search', search);
-        if (role !== 'all') params.append('role', role);
-
-        const response = await fetch(`${API_BASE_URL}/admin/users?${params}`, {
+        const response = await fetch(`${API_BASE_URL}/admin/users`, {
             headers: {
                 'Authorization': `Bearer ${authToken}`
             }
@@ -85,41 +84,95 @@ async function loadUsers() {
         }
     } catch (error) {
         console.error('Kullanıcılar yüklenirken hata:', error);
+        showAlert('Kullanıcılar yüklenirken hata oluştu!', 'danger');
     }
 }
 
 // Kullanıcıları göster
 function displayUsers(users) {
+    console.log('Kullanıcı verileri:', users); // Debug için
     const tbody = document.getElementById('usersTableBody');
     
+    if (!tbody) {
+        console.error('usersTableBody elementi bulunamadı!');
+        return;
+    }
+    
     if (users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Kullanıcı bulunamadı</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Kullanıcı bulunamadı</td></tr>';
         return;
     }
 
-    tbody.innerHTML = users.map(user => `
-        <tr>
-            <td>${user.name}</td>
-            <td>${user.email}</td>
-            <td><span class="badge bg-${getRoleBadgeColor(user.role)}">${getRoleText(user.role)}</span></td>
-            <td>
-                ${user.isBanned ? 
-                    '<span class="badge bg-danger">Banlandı</span>' : 
-                    '<span class="badge bg-success">Aktif</span>'
-                }
-            </td>
-            <td>${new Date(user.createdAt).toLocaleDateString('tr-TR')}</td>
-            <td>
-                <button class="btn btn-sm btn-outline-primary" onclick="editUserRole('${user._id}', '${user.role}')">
-                    Rol Değiştir
-                </button>
-                ${!user.isBanned ? 
-                    `<button class="btn btn-sm btn-outline-danger" onclick="banUser('${user._id}')">Banla</button>` :
-                    `<button class="btn btn-sm btn-outline-success" onclick="unbanUser('${user._id}')">Ban Kaldır</button>`
-                }
-            </td>
-        </tr>
-    `).join('');
+    const baseUrl = API_BASE_URL.replace('/api', '');
+
+    const tableRows = users.map(user => {
+        // Profil fotoğrafı HTML'i
+        const profileImageHtml = user.profileImage ? 
+            `<img src="${baseUrl}${user.profileImage}" alt="Profil Resmi" 
+                 class="rounded-circle me-3" 
+                 style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #667eea;"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+             <div class="profile-placeholder rounded-circle me-3 d-none" style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: bold;">
+                ${user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+             </div>` :
+            `<div class="profile-placeholder rounded-circle me-3" style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: bold;">
+                ${user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+             </div>`;
+
+        // Tarih formatı
+        const createdDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR') : 'Bilinmiyor';
+
+        return `
+            <tr>
+                <td class="align-middle">
+                    <div class="d-flex align-items-center">
+                        ${profileImageHtml}
+                        <span class="fw-bold">${user.name || 'İsimsiz'}</span>
+                    </div>
+                </td>
+                <td class="align-middle">
+                    <span class="text-muted">${user.email || 'Email yok'}</span>
+                </td>
+                <td class="align-middle">
+                    <span class="badge bg-${getRoleBadgeColor(user.role)}">
+                        ${getRoleText(user.role)}
+                    </span>
+                </td>
+                <td class="align-middle">
+                    <span class="badge bg-${user.isBanned ? 'danger' : 'success'}">
+                        ${user.isBanned ? 'Banlandı' : 'Aktif'}
+                    </span>
+                </td>
+                <td class="align-middle">
+                    <small>${createdDate}</small>
+                </td>
+                <td class="align-middle">
+                    <div class="btn-group" role="group" aria-label="Kullanıcı işlemleri">
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="editUserRole('${user._id}', '${user.role}')" 
+                                title="Rol Değiştir">
+                            <i class="fas fa-user-cog"></i>
+                        </button>
+                        ${!user.isBanned ? 
+                            `<button class="btn btn-sm btn-outline-danger" 
+                                     onclick="banUser('${user._id}')" 
+                                     title="Kullanıcıyı Banla">
+                                <i class="fas fa-ban"></i>
+                            </button>` :
+                            `<button class="btn btn-sm btn-outline-success" 
+                                     onclick="unbanUser('${user._id}')" 
+                                     title="Ban Kaldır">
+                                <i class="fas fa-check"></i>
+                            </button>`
+                        }
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    tbody.innerHTML = tableRows;
+    console.log('Tablo güncellendi, kullanıcı sayısı:', users.length);
 }
 
 // Kullanıcı rolü düzenleme
@@ -161,17 +214,9 @@ document.getElementById('userRoleForm').addEventListener('submit', async (e) => 
 });
 
 // Kullanıcı banlama
-function banUser(userId) {
-    document.getElementById('banUserId').value = userId;
-    new bootstrap.Modal(document.getElementById('banUserModal')).show();
-}
-
-// Ban işlemi
-document.getElementById('banUserForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const userId = document.getElementById('banUserId').value;
-    const banReason = document.getElementById('banReason').value;
+async function banUser(userId) {
+    const confirmBan = confirm('Bu kullanıcıyı banlamak istediğinizden emin misiniz?');
+    if (!confirmBan) return;
 
     try {
         const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/ban`, {
@@ -180,15 +225,13 @@ document.getElementById('banUserForm').addEventListener('submit', async (e) => {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${authToken}`
             },
-            body: JSON.stringify({ isBanned: true, banReason })
+            body: JSON.stringify({ isBanned: true, banReason: 'Admin tarafından banlandı' })
         });
 
         const data = await response.json();
 
         if (response.ok) {
             showAlert(data.message, 'success');
-            bootstrap.Modal.getInstance(document.getElementById('banUserModal')).hide();
-            document.getElementById('banReason').value = '';
             loadUsers();
         } else {
             showAlert(data.message, 'danger');
@@ -196,7 +239,9 @@ document.getElementById('banUserForm').addEventListener('submit', async (e) => {
     } catch (error) {
         showAlert('Bağlantı hatası!', 'danger');
     }
-});
+}
+
+
 
 // Ban kaldırma
 async function unbanUser(userId) {
@@ -522,6 +567,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 loadUsers();
             } else if (target === '#courses') {
                 loadPendingCourses();
+            } else if (target === '#teacher-applications') {
+                loadTeacherApplications();
             } else if (target === '#announcements') {
                 loadAnnouncements();
             }
@@ -530,13 +577,303 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Yardımcı fonksiyonlar
+// Öğretmen başvurularını yükle
+async function loadTeacherApplications() {
+    if (!authToken) {
+        showAlert('Giriş yapmanız gerekiyor!', 'danger');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/teacher-applications`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        if (response.ok) {
+            const applications = await response.json();
+            displayTeacherApplications(applications);
+        }
+    } catch (error) {
+        console.error('Öğretmen başvuruları yüklenirken hata:', error);
+    }
+}
+
+// Öğretmen başvurularını göster
+function displayTeacherApplications(applications) {
+    const content = document.getElementById('teacherApplicationsContent');
+    
+    if (applications.length === 0) {
+        content.innerHTML = '<div class="alert alert-info">Bekleyen öğretmen başvurusu bulunmuyor.</div>';
+        return;
+    }
+
+    content.innerHTML = applications.map(application => `
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5>${application.name}</h5>
+                        <p><strong>Email:</strong> ${application.email}</p>
+                        <p><strong>Başvuru Tarihi:</strong> ${new Date(application.teacherApplication.appliedAt).toLocaleDateString('tr-TR')}</p>
+                        <div class="alert alert-light">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Bu kullanıcı öğretmen olmak için başvuruda bulunmuştur.
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-primary mb-2" onclick="reviewTeacherApplication('${application._id}', '${application.name}', '${application.email}')">
+                            İncele
+                        </button><br>
+                        <button class="btn btn-success mb-2" onclick="approveTeacherApplication('${application._id}')">
+                            Hızlı Onayla
+                        </button><br>
+                        <button class="btn btn-danger" onclick="rejectTeacherApplication('${application._id}')">
+                            Hızlı Reddet
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Öğretmen başvurusunu incele
+function reviewTeacherApplication(userId, name, email) {
+    document.getElementById('applicationUserId').value = userId;
+    document.getElementById('teacherApplicationDetails').innerHTML = `
+        <h6>${name}</h6>
+        <p><strong>Email:</strong> ${email}</p>
+    `;
+    new bootstrap.Modal(document.getElementById('teacherApplicationModal')).show();
+}
+
+// Öğretmen başvuru onay durumu değiştiğinde
+document.getElementById('applicationStatus').addEventListener('change', function() {
+    const rejectionDiv = document.getElementById('applicationRejectionDiv');
+    if (this.value === 'rejected') {
+        rejectionDiv.style.display = 'block';
+        document.getElementById('applicationRejectionReason').required = true;
+    } else {
+        rejectionDiv.style.display = 'none';
+        document.getElementById('applicationRejectionReason').required = false;
+    }
+});
+
+// Öğretmen başvuru inceleme formu
+document.getElementById('teacherApplicationForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const userId = document.getElementById('applicationUserId').value;
+    const status = document.getElementById('applicationStatus').value;
+    const rejectionReason = document.getElementById('applicationRejectionReason').value;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/teacher-applications/${userId}/review`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ status, rejectionReason })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showAlert(data.message, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('teacherApplicationModal')).hide();
+            loadTeacherApplications();
+            loadAdminDashboard();
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    } catch (error) {
+        showAlert('Bağlantı hatası!', 'danger');
+    }
+});
+
+// Hızlı onaylama - Modern modal ile
+async function approveTeacherApplication(userId) {
+    try {
+        // Kullanıcı bilgilerini al
+        const url = `${API_BASE_URL}/admin/users/${userId}`;
+        console.log('Onaylama için kullanıcı bilgisi isteniyor:', url); // Debug
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        if (response.ok) {
+            const user = await response.json();
+            showApprovalModal(user);
+        } else {
+            showAlert('Kullanıcı bilgileri alınamadı!', 'danger');
+        }
+    } catch (error) {
+        showAlert('Bağlantı hatası!', 'danger');
+    }
+}
+
+// Onay modalını göster
+function showApprovalModal(user) {
+    const modal = new bootstrap.Modal(document.getElementById('teacherApprovalModal'));
+    document.getElementById('approvalTeacherName').textContent = user.name;
+    
+    document.getElementById('confirmApprovalBtn').onclick = () => {
+        processTeacherApproval(user._id);
+        modal.hide();
+    };
+    
+    modal.show();
+}
+
+// Onay işlemini gerçekleştir
+async function processTeacherApproval(userId) {
+    const confirmBtn = document.getElementById('confirmApprovalBtn');
+    const originalText = confirmBtn.innerHTML;
+    
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Onaylanıyor...';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/teacher-applications/${userId}/review`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ status: 'approved' })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Başarı animasyonu ile modern alert
+            showModernAlert({
+                type: 'success',
+                title: 'Başvuru Onaylandı!',
+                message: 'Öğretmen başvurusu başarıyla onaylandı. Kullanıcıya email bildirimi gönderildi.',
+                icon: 'fas fa-check-circle',
+                duration: 5000
+            });
+            
+            loadTeacherApplications();
+            loadAdminDashboard();
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    } catch (error) {
+        showAlert('Bağlantı hatası!', 'danger');
+    } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = originalText;
+    }
+}
+
+// Hızlı reddetme - Modern modal ile
+async function rejectTeacherApplication(userId) {
+    try {
+        // Kullanıcı bilgilerini al
+        const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        if (response.ok) {
+            const user = await response.json();
+            showRejectionModal(user);
+        } else {
+            showAlert('Kullanıcı bilgileri alınamadı!', 'danger');
+        }
+    } catch (error) {
+        showAlert('Bağlantı hatası!', 'danger');
+    }
+}
+
+// Red modalını göster
+function showRejectionModal(user) {
+    const modal = new bootstrap.Modal(document.getElementById('teacherRejectionModal'));
+    document.getElementById('rejectionTeacherName').textContent = user.name;
+    document.getElementById('rejectionReasonText').value = '';
+    
+    document.getElementById('confirmRejectionBtn').onclick = () => {
+        const reason = document.getElementById('rejectionReasonText').value.trim();
+        if (reason) {
+            processTeacherRejection(user._id, reason);
+            modal.hide();
+        } else {
+            showAlert('Lütfen red sebebini yazın!', 'warning');
+        }
+    };
+    
+    modal.show();
+}
+
+// Red işlemini gerçekleştir
+async function processTeacherRejection(userId, reason) {
+    const confirmBtn = document.getElementById('confirmRejectionBtn');
+    const originalText = confirmBtn.innerHTML;
+    
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Reddediliyor...';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/teacher-applications/${userId}/review`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ status: 'rejected', rejectionReason: reason })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Başarı animasyonu ile modern alert
+            showModernAlert({
+                type: 'warning',
+                title: 'Başvuru Reddedildi',
+                message: 'Öğretmen başvurusu reddedildi. Kullanıcıya red sebebi ile birlikte email bildirimi gönderildi.',
+                icon: 'fas fa-exclamation-triangle',
+                duration: 5000
+            });
+            
+            loadTeacherApplications();
+            loadAdminDashboard();
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    } catch (error) {
+        showAlert('Bağlantı hatası!', 'danger');
+    } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = originalText;
+    }
+}
+
 function getRoleBadgeColor(role) {
     const colors = {
         'student': 'primary',
         'teacher': 'success',
-        'admin': 'danger'
+        'admin': 'danger',
+        'pending_teacher': 'warning'
     };
     return colors[role] || 'secondary';
+}
+
+function getRoleText(role) {
+    const roles = {
+        'student': 'Öğrenci',
+        'teacher': 'Öğretmen',
+        'admin': 'Yönetici',
+        'pending_teacher': 'Öğretmen Başvurusu'
+    };
+    return roles[role] || role;
 }
 
 function getAnnouncementTypeText(type) {
@@ -557,4 +894,47 @@ function getTargetAudienceText(audience) {
         'admins': 'Adminler'
     };
     return audiences[audience] || audience;
+}// Modern alert gösterme
+function showModernAlert({ type, title, message, icon, duration = 4000 }) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show modern-alert`;
+    alertDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 350px;
+        max-width: 500px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        border: none;
+        border-radius: 12px;
+        animation: slideInRight 0.3s ease;
+    `;
+    
+    alertDiv.innerHTML = `
+        <div class="d-flex align-items-start">
+            <div class="me-3 mt-1">
+                <i class="${icon} fa-2x"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="alert-heading mb-1">${title}</h6>
+                <p class="mb-0">${message}</p>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Otomatik kapat
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 300);
+        }
+    }, duration);
 }

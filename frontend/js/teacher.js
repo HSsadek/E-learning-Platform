@@ -113,10 +113,10 @@ function displayTeacherCourses(courses) {
                         ${course.rejectionReason ? `<div class="alert alert-danger"><strong>Red Sebebi:</strong> ${course.rejectionReason}</div>` : ''}
                     </div>
                     <div class="col-md-4 text-end">
+                        <button class="btn btn-primary btn-sm mb-2" onclick="editCourse('${course._id}')">
+                            Düzenle
+                        </button><br>
                         ${course.status === 'draft' ? `
-                            <button class="btn btn-primary btn-sm mb-2" onclick="editCourse('${course._id}')">
-                                Düzenle
-                            </button><br>
                             <button class="btn btn-success btn-sm mb-2" onclick="submitCourseForApproval('${course._id}')">
                                 Onaya Gönder
                             </button><br>
@@ -143,6 +143,10 @@ function displayTeacherCourses(courses) {
 document.getElementById('createCourseForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    const form = e.target;
+    const editId = form.getAttribute('data-edit-id');
+    const isEditing = !!editId;
+    
     const courseData = {
         title: document.getElementById('courseTitle').value,
         description: document.getElementById('courseDescription').value,
@@ -154,8 +158,14 @@ document.getElementById('createCourseForm').addEventListener('submit', async (e)
     };
 
     try {
-        const response = await fetch(`${API_BASE_URL}/teacher/courses`, {
-            method: 'POST',
+        const url = isEditing 
+            ? `${API_BASE_URL}/teacher/courses/${editId}`
+            : `${API_BASE_URL}/teacher/courses`;
+        
+        const method = isEditing ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${authToken}`
@@ -166,9 +176,20 @@ document.getElementById('createCourseForm').addEventListener('submit', async (e)
         const data = await response.json();
 
         if (response.ok) {
-            showAlert('Kurs başarıyla oluşturuldu!', 'success');
+            const message = isEditing ? 'Kurs başarıyla güncellendi!' : 'Kurs başarıyla oluşturuldu!';
+            showAlert(message, 'success');
+            
+            // Formu sıfırla
             document.getElementById('createCourseForm').reset();
+            form.removeAttribute('data-edit-id');
             resetLessons();
+            
+            // Başlığı sıfırla
+            const titleElement = document.querySelector('#create-course .card-header h5');
+            if (titleElement) {
+                titleElement.textContent = 'Yeni Kurs Oluştur';
+            }
+            
             loadTeacherCourses();
         } else {
             showAlert(data.message, 'danger');
@@ -264,6 +285,56 @@ function resetLessons() {
             </div>
         </div>
     `;
+}
+
+// Kurs oluştur ve direkt onaya gönder
+async function createAndSubmitCourse() {
+    const courseData = {
+        title: document.getElementById('courseTitle').value,
+        description: document.getElementById('courseDescription').value,
+        category: document.getElementById('courseCategory').value,
+        level: document.getElementById('courseLevel').value,
+        duration: parseInt(document.getElementById('courseDuration').value),
+        price: parseFloat(document.getElementById('coursePrice').value) || 0,
+        lessons: getLessonsData()
+    };
+
+    // Validasyon
+    if (!courseData.title || !courseData.description || !courseData.category) {
+        showAlert('Lütfen tüm zorunlu alanları doldurun!', 'warning');
+        return;
+    }
+
+    if (courseData.lessons.length === 0) {
+        showAlert('En az bir ders eklemelisiniz!', 'warning');
+        return;
+    }
+
+    try {
+        // Kursu oluştur
+        const response = await fetch(`${API_BASE_URL}/teacher/courses`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify(courseData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showAlert('Kurs başarıyla oluşturuldu!', 'success');
+            document.getElementById('createCourseForm').reset();
+            resetLessons();
+            loadTeacherCourses();
+        } else {
+            showAlert(data.message || 'Kurs oluşturulurken hata oluştu!', 'danger');
+        }
+    } catch (error) {
+        console.error('Kurs oluşturma hatası:', error);
+        showAlert('Bağlantı hatası!', 'danger');
+    }
 }
 
 // Kursu onaya gönder
@@ -670,4 +741,72 @@ function getStatusBadgeColor(status) {
         'rejected': 'danger'
     };
     return colors[status] || 'secondary';
+}
+
+// Kurs sorularını görüntüle
+function viewCourseQuestions(courseId) {
+    showAlert('Soru yönetimi özelliği yakında eklenecek!', 'info');
+}
+
+// Kurs düzenleme
+async function editCourse(courseId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/teacher/courses`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const course = data.courses.find(c => c._id === courseId);
+            
+            if (!course) {
+                showAlert('Kurs bulunamadı!', 'danger');
+                return;
+            }
+
+            // Form alanlarını doldur
+            document.getElementById('courseTitle').value = course.title;
+            document.getElementById('courseDescription').value = course.description;
+            document.getElementById('courseCategory').value = course.category;
+            document.getElementById('courseLevel').value = course.level;
+            document.getElementById('courseDuration').value = course.duration;
+            document.getElementById('coursePrice').value = course.price;
+
+            // Mevcut dersleri temizle
+            document.getElementById('lessonsContainer').innerHTML = '';
+
+            // Dersleri ekle
+            course.lessons.forEach((lesson, index) => {
+                addLesson();
+                const lessonItems = document.querySelectorAll('.lesson-item');
+                const currentLesson = lessonItems[lessonItems.length - 1];
+                
+                currentLesson.querySelector('.lesson-title').value = lesson.title;
+                currentLesson.querySelector('.lesson-duration').value = lesson.duration;
+                currentLesson.querySelector('.lesson-content').value = lesson.content || '';
+                currentLesson.querySelector('.lesson-video').value = lesson.videoUrl || '';
+            });
+
+            // Form'u düzenleme moduna al
+            const form = document.getElementById('createCourseForm');
+            form.setAttribute('data-edit-id', courseId);
+            
+            // Sayfa başlığını değiştir
+            const titleElement = document.querySelector('#create-course .card-header h5');
+            if (titleElement) {
+                titleElement.textContent = 'Kurs Düzenle';
+            }
+            
+            // Create course sekmesine geç
+            const createTab = document.querySelector('button[data-bs-target="#create-course"]');
+            createTab.click();
+            
+            showAlert('Kurs düzenleme için yüklendi', 'info');
+        }
+    } catch (error) {
+        console.error('Kurs düzenleme hatası:', error);
+        showAlert('Kurs yüklenirken hata oluştu!', 'danger');
+    }
 }

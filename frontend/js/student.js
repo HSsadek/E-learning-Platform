@@ -319,6 +319,20 @@ async function continueCourse(courseId) {
                 return;
             }
 
+            // Debug: Kurs lesson'larını kontrol et (geliştirme amaçlı)
+            if (window.location.hostname === 'localhost') {
+                console.log('🔍 Kurs Lesson Debug:', {
+                    courseTitle: data.course.title,
+                    totalLessons: data.course.lessons.length,
+                    lessons: data.course.lessons.map((lesson, index) => ({
+                        index,
+                        title: lesson.title,
+                        hasVideoUrl: !!lesson.videoUrl,
+                        videoUrl: lesson.videoUrl
+                    }))
+                });
+            }
+
             // Son kaldığı dersi bul veya ilk dersi başlat
             let nextLessonIndex = 0;
             if (data.progress && data.progress.completedLessons.length > 0) {
@@ -395,7 +409,7 @@ function displayLesson(data) {
                     <div class="card-body">
                         ${lesson.videoUrl ? `
                             <div class="ratio ratio-16x9 mb-3">
-                                <iframe src="${lesson.videoUrl}" allowfullscreen></iframe>
+                                <iframe src="${convertToEmbedUrl(lesson.videoUrl)}" allowfullscreen frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
                             </div>
                         ` : `
                             <div class="alert alert-info">
@@ -823,4 +837,27 @@ function getLevelBadgeColor(level) {
         'advanced': 'danger'
     };
     return colors[level] || 'secondary';
+}// YouTube URL'sini embed formatına çevir
+function convertToEmbedUrl(url) {
+    if (!url) return null;
+    
+    // YouTube watch URL'sini embed URL'sine çevir
+    if (url.includes('youtube.com/watch?v=')) {
+        const videoId = url.split('v=')[1].split('&')[0];
+        return `https://www.youtube.com/embed/${videoId}`;
+    }
+    
+    // YouTube short URL'sini embed URL'sine çevir
+    if (url.includes('youtu.be/')) {
+        const videoId = url.split('youtu.be/')[1].split('?')[0];
+        return `https://www.youtube.com/embed/${videoId}`;
+    }
+    
+    // Zaten embed URL'si ise olduğu gibi döndür
+    if (url.includes('youtube.com/embed/')) {
+        return url;
+    }
+    
+    // Diğer video platformları için (Vimeo, etc.)
+    return url;
 }

@@ -1415,4 +1415,25 @@ textarea[readonly]:focus {
 .modern-alert.alert-info {
     background: rgba(13, 202, 240, 0.1) !important;
     border-left: 4px solid #0dcaf0;
+}/* Alert
+ animasyonları */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.custom-alert {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: none;
+    border-radius: 8px;
+}
+
+.custom-alert .btn-close {
+    padding: 0.5rem;
 }

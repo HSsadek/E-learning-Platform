@@ -71,11 +71,11 @@ function updateStudentRecentActivities(data) {
         `).join('');
     }
 
-    // İlerleme genel bakış
+    // İlerleme genel bakış - tüm kursları göster
     if (data.courses.length === 0) {
         progressOverviewDiv.innerHTML = '<p class="text-muted">Henüz kurs kaydınız yok</p>';
     } else {
-        progressOverviewDiv.innerHTML = data.courses.slice(0, 3).map(course => `
+        progressOverviewDiv.innerHTML = data.courses.map(course => `
             <div class="mb-3">
                 <div class="d-flex justify-content-between">
                     <span>${course.title}</span>
@@ -117,45 +117,59 @@ function displayStudentCourses(courses) {
     }
 
     content.innerHTML = courses.map(course => `
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="row">
+        <div class="card student-course-card mb-4" style="border-radius: 15px; overflow: hidden;">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
                     <div class="col-md-8">
-                        <h5>${course.title}</h5>
-                        <p class="text-muted">${course.description}</p>
-                        <div class="mb-2">
-                            <small class="text-muted">
-                                <i class="fas fa-user"></i> ${course.instructor.name} |
-                                <i class="fas fa-clock"></i> ${course.duration} dakika |
-                                <i class="fas fa-users"></i> ${course.students.length} öğrenci
-                            </small>
-                        </div>
-                        <div class="progress mb-2">
-                            <div class="progress-bar ${course.progress.progressPercentage === 100 ? 'bg-success' : ''}" 
-                                 style="width: ${course.progress.progressPercentage}%">
-                                ${course.progress.progressPercentage}%
+                        <div class="d-flex align-items-start mb-3">
+                            ${course.instructor.profileImage ? 
+                                `<img src="${API_BASE_URL.replace('/api', '')}${course.instructor.profileImage}" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #667eea;">` :
+                                `<div class="rounded-circle me-3 bg-primary text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-weight: bold; font-size: 18px;">${course.instructor.name.charAt(0).toUpperCase()}</div>`
+                            }
+                            <div>
+                                <h5 class="mb-1" style="color: #333;">${course.title}</h5>
+                                <small class="text-muted">${course.instructor.name}</small>
                             </div>
                         </div>
-                        <small class="text-muted">
-                            ${course.progress.completedLessons}/${course.progress.totalLessons} ders tamamlandı
+                        
+                        <p class="text-muted small mb-3">${course.description.substring(0, 100)}...</p>
+                        
+                        <!-- İlerleme Çubuğu -->
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="fw-bold" style="color: #667eea;">İlerleme</small>
+                                <small class="fw-bold" style="color: ${course.progress.progressPercentage === 100 ? '#28a745' : '#667eea'};">${course.progress.progressPercentage}%</small>
+                            </div>
+                            <div class="progress" style="height: 8px; border-radius: 10px;">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: ${course.progress.progressPercentage}%; background: ${course.progress.progressPercentage === 100 ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}; border-radius: 10px;">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-3 text-muted small">
+                            <span><i class="fas fa-book-open me-1"></i>${course.progress.completedLessons}/${course.progress.totalLessons} ders</span>
+                            <span><i class="fas fa-clock me-1"></i>${course.duration} dk</span>
                             ${course.progress.lastAccessedAt ? 
-                                ` | Son erişim: ${new Date(course.progress.lastAccessedAt).toLocaleDateString('tr-TR')}` : 
+                                `<span><i class="fas fa-calendar me-1"></i>${new Date(course.progress.lastAccessedAt).toLocaleDateString('tr-TR')}</span>` : 
                                 ''
                             }
-                        </small>
+                        </div>
                     </div>
-                    <div class="col-md-4 text-end">
-                        <button class="btn btn-primary mb-2" onclick="continueCourse('${course._id}')">
-                            ${course.progress.progressPercentage === 0 ? 'Başla' : 'Devam Et'}
-                        </button><br>
-                        <button class="btn btn-outline-info btn-sm mb-2" onclick="showCourseDetail('${course._id}')">
-                            Detaylar
-                        </button><br>
-                        ${course.progress.progressPercentage > 0 ? `
-                            <button class="btn btn-outline-warning btn-sm" onclick="reviewCourse('${course._id}')">
-                                Değerlendir
+                    <div class="col-md-4 text-end mt-3 mt-md-0">
+                        <button class="btn btn-gradient w-100 mb-2" onclick="continueCourse('${course._id}')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 25px; padding: 12px;">
+                            <i class="fas fa-play me-1"></i> ${course.progress.progressPercentage === 0 ? 'Başla' : 'Devam Et'}
+                        </button>
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="showCourseDetail('${course._id}')" style="border-radius: 20px;">
+                                <i class="fas fa-info-circle"></i>
                             </button>
-                        ` : ''}
+                            ${course.progress.progressPercentage > 0 ? `
+                                <button class="btn btn-outline-warning btn-sm" onclick="reviewCourse('${course._id}')" style="border-radius: 20px;">
+                                    <i class="fas fa-star"></i>
+                                </button>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -390,6 +404,7 @@ async function startLesson(courseId, lessonIndex) {
 function displayLesson(data) {
     console.log('displayLesson çağrıldı, data:', data);
     console.log('Lesson videoUrl:', data.lesson.videoUrl);
+    console.log('Instructor:', data.course.instructor);
     
     const content = document.getElementById('lessonContent');
     const course = data.course;
@@ -470,20 +485,32 @@ function displayLesson(data) {
                             data.questions.map(question => `
                                 <div class="card mb-2">
                                     <div class="card-body">
-                                        <h6>${question.title}</h6>
-                                        <p>${question.content}</p>
-                                        <small class="text-muted">
-                                            ${question.student.name} - ${new Date(question.createdAt).toLocaleDateString('tr-TR')}
-                                        </small>
-                                        ${question.isAnswered ? `
-                                            <div class="mt-2 p-2 bg-light rounded">
-                                                <strong>Yanıt:</strong><br>
-                                                ${question.answer.content}
-                                                <br><small class="text-muted">
-                                                    ${question.answer.answeredBy.name} - ${new Date(question.answer.answeredAt).toLocaleDateString('tr-TR')}
-                                                </small>
+                                        <div class="d-flex align-items-start mb-2">
+                                            ${question.student.profileImage ? 
+                                                `<img src="${API_BASE_URL.replace('/api', '')}${question.student.profileImage}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">` :
+                                                `<div class="rounded-circle me-2 bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-weight: bold;">${question.student.name.charAt(0).toUpperCase()}</div>`
+                                            }
+                                            <div class="flex-grow-1">
+                                                <strong>${question.student.name}</strong>
+                                                <small class="text-muted ms-2">${new Date(question.createdAt).toLocaleDateString('tr-TR')}</small>
+                                                <p class="mb-0 mt-1">${question.content}</p>
                                             </div>
-                                        ` : '<div class="mt-2"><span class="badge bg-warning">Yanıt bekleniyor</span></div>'}
+                                        </div>
+                                        ${question.isAnswered ? `
+                                            <div class="mt-2 p-2 bg-light rounded ms-5">
+                                                <div class="d-flex align-items-start">
+                                                    ${question.answer.answeredBy.profileImage ? 
+                                                        `<img src="${API_BASE_URL.replace('/api', '')}${question.answer.answeredBy.profileImage}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">` :
+                                                        `<div class="rounded-circle me-2 bg-success text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 12px; font-weight: bold;">${question.answer.answeredBy.name.charAt(0).toUpperCase()}</div>`
+                                                    }
+                                                    <div>
+                                                        <strong>${question.answer.answeredBy.name}</strong> <span class="badge bg-success">Eğitmen</span>
+                                                        <small class="text-muted ms-2">${new Date(question.answer.answeredAt).toLocaleDateString('tr-TR')}</small>
+                                                        <p class="mb-0 mt-1">${question.answer.content}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ` : '<div class="mt-2 ms-5"><span class="badge bg-warning">Yanıt bekleniyor</span></div>'}
                                     </div>
                                 </div>
                             `).join('')
@@ -493,38 +520,61 @@ function displayLesson(data) {
             </div>
             
             <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h6>Kurs İlerlemesi</h6>
+                <div class="card" style="border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                    <div class="card-header bg-transparent border-0 pt-3">
+                        <h6 class="mb-0"><i class="fas fa-chart-line me-2 text-primary"></i>Kurs İlerlemesi</h6>
                     </div>
                     <div class="card-body">
-                        <div class="progress mb-2">
-                            <div class="progress-bar" style="width: ${data.progress.progressPercentage}%">
-                                ${data.progress.progressPercentage}%
+                        <div class="text-center mb-3">
+                            <div class="position-relative d-inline-block">
+                                <svg width="120" height="120" viewBox="0 0 120 120">
+                                    <circle cx="60" cy="60" r="54" fill="none" stroke="#e9ecef" stroke-width="12"/>
+                                    <circle cx="60" cy="60" r="54" fill="none" stroke="url(#gradient)" stroke-width="12" 
+                                            stroke-dasharray="${339.292 * data.progress.progressPercentage / 100} 339.292" 
+                                            stroke-linecap="round" transform="rotate(-90 60 60)"/>
+                                    <defs>
+                                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" style="stop-color:#667eea"/>
+                                            <stop offset="100%" style="stop-color:#764ba2"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <div class="position-absolute top-50 start-50 translate-middle">
+                                    <h4 class="mb-0 fw-bold" style="color: #667eea;">${data.progress.progressPercentage}%</h4>
+                                </div>
                             </div>
                         </div>
-                        <small class="text-muted">
-                            ${data.progress.completedLessons.length}/${course.totalLessons} ders tamamlandı
-                        </small>
+                        <div class="text-center">
+                            <small class="text-muted d-block">${data.progress.completedLessons.length}/${course.totalLessons} ders tamamlandı</small>
+                            ${data.progress.progressPercentage === 100 ? 
+                                '<span class="badge bg-success mt-2"><i class="fas fa-trophy me-1"></i>Tamamlandı!</span>' : 
+                                ''
+                            }
+                        </div>
                     </div>
                 </div>
                 
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <h6>Eğitmen</h6>
+                <div class="card mt-3" style="border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                    <div class="card-header bg-transparent border-0 pt-3">
+                        <h6 class="mb-0"><i class="fas fa-chalkboard-teacher me-2 text-primary"></i>Eğitmen</h6>
                     </div>
-                    <div class="card-body">
-                        <p><strong>${course.instructor.name}</strong></p>
-                        <p class="text-muted">${course.instructor.email}</p>
+                    <div class="card-body text-center">
+                        ${course.instructor.profileImage ? 
+                            `<img src="${API_BASE_URL.replace('/api', '')}${course.instructor.profileImage}" class="rounded-circle mb-2" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #667eea;">` :
+                            `<div class="rounded-circle mx-auto mb-2 text-white d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 32px; font-weight: bold; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">${course.instructor.name.charAt(0).toUpperCase()}</div>`
+                        }
+                        <h6 class="mb-1" style="color: #333;">${course.instructor.name}</h6>
+                        <small class="text-muted">${course.instructor.email}</small>
                     </div>
                 </div>
                 
                 ${data.progress.progressPercentage > 0 ? `
-                <div class="card mt-3">
-                    <div class="card-body text-center">
-                        <p class="mb-2">Bu kursu beğendiniz mi?</p>
-                        <button class="btn btn-warning w-100" onclick="reviewCourse('${course._id}')">
-                            <i class="fas fa-star"></i> Kursu Değerlendir
+                <div class="card mt-3" style="border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-star text-warning fa-2x mb-2"></i>
+                        <p class="mb-3">Bu kursu beğendiniz mi?</p>
+                        <button class="btn w-100" onclick="reviewCourse('${course._id}')" style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); border: none; border-radius: 25px; color: white;">
+                            <i class="fas fa-star me-1"></i> Kursu Değerlendir
                         </button>
                     </div>
                 </div>
@@ -573,8 +623,10 @@ document.getElementById('askQuestionForm').addEventListener('submit', async (e) 
     
     const courseId = document.getElementById('questionCourseId').value;
     const lessonIndex = parseInt(document.getElementById('questionLessonIndex').value);
-    const title = document.getElementById('questionTitle').value;
     const content = document.getElementById('questionContent').value;
+    
+    // Başlık olarak içeriğin ilk 50 karakterini kullan
+    const title = content.substring(0, 50) + (content.length > 50 ? '...' : '');
 
     try {
         const response = await fetch(`${API_BASE_URL}/courses/${courseId}/ask-question`, {
@@ -694,42 +746,90 @@ function displayStudentQuestions(questions) {
     const content = document.getElementById('studentQuestionsContent');
     
     if (questions.length === 0) {
-        content.innerHTML = '<div class="alert alert-info">Henüz soru sormadınız.</div>';
+        content.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-question-circle fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">Henüz soru sormadınız</h5>
+                <p class="text-muted small">Derslerle ilgili sorularınızı ders sayfasından sorabilirsiniz.</p>
+            </div>
+        `;
         return;
     }
 
-    content.innerHTML = questions.map(question => `
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6>${question.title}</h6>
-                        <p>${question.content}</p>
-                        <small class="text-muted">
-                            <strong>Kurs:</strong> ${question.course.title} | 
-                            <strong>Ders:</strong> ${question.lesson + 1} |
-                            <strong>Tarih:</strong> ${new Date(question.createdAt).toLocaleDateString('tr-TR')}
-                        </small>
-                        ${question.isAnswered ? `
-                            <div class="mt-2 p-2 bg-light rounded">
-                                <strong>Yanıt:</strong><br>
-                                ${question.answer.content}
-                                <br><small class="text-muted">
-                                    ${question.answer.answeredBy.name} - ${new Date(question.answer.answeredAt).toLocaleDateString('tr-TR')}
-                                </small>
-                            </div>
-                        ` : ''}
-                    </div>
-                    <div>
-                        ${question.isAnswered ? 
-                            '<span class="badge bg-success">Yanıtlandı</span>' : 
-                            '<span class="badge bg-warning">Yanıt bekleniyor</span>'
+    content.innerHTML = questions.map(question => {
+        // Güvenli değişkenler - currentUser'dan al veya question.student'dan
+        const studentName = question.student?.name || currentUser?.name || 'Öğrenci';
+        const studentImage = question.student?.profileImage || currentUser?.profileImage;
+        const answeredByName = question.answer?.answeredBy?.name || 'Eğitmen';
+        const answeredByImage = question.answer?.answeredBy?.profileImage;
+        
+        return `
+        <div class="card mb-3" style="border: none; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center">
+                        ${studentImage ? 
+                            `<img src="${API_BASE_URL.replace('/api', '')}${studentImage}" class="rounded-circle me-3" style="width: 45px; height: 45px; object-fit: cover; border: 2px solid #667eea;">` :
+                            `<div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 45px; height: 45px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: bold;">
+                                ${studentName.charAt(0).toUpperCase()}
+                            </div>`
                         }
+                        <div>
+                            <span class="fw-bold d-block mb-1" style="color: #333;">${studentName}</span>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge" style="background: rgba(102, 126, 234, 0.1); color: #667eea; font-weight: 500;">
+                                    <i class="fas fa-book me-1"></i>${question.course?.title || 'Kurs'}
+                                </span>
+                                <span class="badge" style="background: rgba(108, 117, 125, 0.1); color: #6c757d; font-weight: 500;">
+                                    <i class="fas fa-play-circle me-1"></i>Ders ${(question.lesson || 0) + 1}
+                                </span>
+                            </div>
+                        </div>
                     </div>
+                    ${question.isAnswered ? 
+                        `<span class="badge" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 8px 16px; border-radius: 20px;">
+                            <i class="fas fa-check-circle me-1"></i>Yanıtlandı
+                        </span>` : 
+                        `<span class="badge" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: #333; padding: 8px 16px; border-radius: 20px;">
+                            <i class="fas fa-clock me-1"></i>Bekliyor
+                        </span>`
+                    }
                 </div>
+                
+                <div class="p-3 mb-3" style="background: #f8f9fa; border-radius: 12px; border-left: 4px solid #667eea;">
+                    <p class="mb-0" style="color: #555;">${question.content || ''}</p>
+                </div>
+                
+                <div class="d-flex align-items-center text-muted small mb-3">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    <span>${new Date(question.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                </div>
+                
+                ${question.isAnswered && question.answer ? `
+                    <div class="p-3" style="background: linear-gradient(135deg, rgba(40, 167, 69, 0.05) 0%, rgba(32, 201, 151, 0.05) 100%); border-radius: 12px; border-left: 4px solid #28a745;">
+                        <div class="d-flex align-items-center mb-2">
+                            ${answeredByImage ? 
+                                `<img src="${API_BASE_URL.replace('/api', '')}${answeredByImage}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover; border: 2px solid #28a745;">` :
+                                `<div class="rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                     style="width: 32px; height: 32px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; font-size: 12px; font-weight: bold;">
+                                    ${answeredByName.charAt(0).toUpperCase()}
+                                </div>`
+                            }
+                            <div>
+                                <span style="font-weight: 600; color: #28a745;">${answeredByName}</span>
+                                <span class="badge bg-success ms-2" style="font-size: 10px;">Eğitmen</span>
+                            </div>
+                            <span class="ms-auto text-muted small">
+                                <i class="fas fa-clock me-1"></i>${new Date(question.answer.answeredAt).toLocaleDateString('tr-TR')}
+                            </span>
+                        </div>
+                        <p class="mb-0" style="color: #555;">${question.answer.content || ''}</p>
+                    </div>
+                ` : ''}
             </div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 // Öğrenci değerlendirmelerini yükle
@@ -755,29 +855,75 @@ function displayStudentReviews(reviews) {
     const content = document.getElementById('studentReviewsContent');
     
     if (reviews.length === 0) {
-        content.innerHTML = '<div class="alert alert-info">Henüz değerlendirme yapmadınız.</div>';
+        content.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-star fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">Henüz değerlendirme yapmadınız</h5>
+                <p class="text-muted small">Tamamladığınız kursları değerlendirerek diğer öğrencilere yardımcı olabilirsiniz.</p>
+            </div>
+        `;
         return;
     }
 
-    content.innerHTML = reviews.map(review => `
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6>${review.course.title}</h6>
-                        <div class="mb-2">
-                            ${generateStars(review.rating)}
-                            <span class="ms-2">${review.rating}/5</span>
+    content.innerHTML = reviews.map(review => {
+        const ratingColor = review.rating >= 4 ? '#28a745' : review.rating >= 3 ? '#ffc107' : '#dc3545';
+        
+        return `
+        <div class="card mb-3" style="border: none; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); overflow: hidden;">
+            <div class="card-body p-0">
+                <!-- Üst Kısım - Kurs Bilgisi -->
+                <div class="p-4" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); border-bottom: 1px solid rgba(0,0,0,0.05);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="fas fa-book-open text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1" style="color: #333; font-weight: 600;">${review.course?.title || 'Kurs'}</h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    ${new Date(review.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                </small>
+                            </div>
                         </div>
-                        <p>${review.comment}</p>
-                        <small class="text-muted">
-                            ${new Date(review.createdAt).toLocaleDateString('tr-TR')}
-                        </small>
+                        <!-- Puan Badge -->
+                        <div class="text-center">
+                            <div class="d-inline-flex align-items-center px-3 py-2" style="background: ${ratingColor}15; border-radius: 12px;">
+                                <span style="font-size: 24px; font-weight: 700; color: ${ratingColor};">${review.rating}</span>
+                                <span class="text-muted ms-1">/5</span>
+                            </div>
+                        </div>
                     </div>
+                </div>
+                
+                <!-- Alt Kısım - Yıldızlar ve Yorum -->
+                <div class="p-4">
+                    <!-- Yıldızlar -->
+                    <div class="mb-3">
+                        ${[1,2,3,4,5].map(star => `
+                            <i class="fas fa-star ${star <= review.rating ? '' : 'text-muted'}" 
+                               style="color: ${star <= review.rating ? '#ffc107' : '#e0e0e0'}; font-size: 18px; margin-right: 2px;"></i>
+                        `).join('')}
+                    </div>
+                    
+                    <!-- Yorum -->
+                    ${review.comment ? `
+                        <div class="p-3" style="background: #f8f9fa; border-radius: 12px; border-left: 4px solid ${ratingColor};">
+                            <p class="mb-0" style="color: #555; font-style: italic;">
+                                <i class="fas fa-quote-left me-2" style="color: ${ratingColor}; opacity: 0.5;"></i>
+                                ${review.comment}
+                            </p>
+                        </div>
+                    ` : `
+                        <p class="text-muted small mb-0">
+                            <i class="fas fa-comment-slash me-1"></i>Yorum eklenmemiş
+                        </p>
+                    `}
                 </div>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 // Kurs önerilerini yükle

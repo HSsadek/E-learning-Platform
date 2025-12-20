@@ -54,7 +54,9 @@
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle me-2"></i>
+                            <span id="userAvatar" class="me-2">
+                                <i class="fas fa-user-circle" style="font-size: 24px;"></i>
+                            </span>
                             <span id="userName"></span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
@@ -1689,7 +1691,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Soru Sor</h5>
+                    <h5 class="modal-title"><i class="fas fa-question-circle"></i> Soru Sor</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -1697,14 +1699,12 @@
                         <input type="hidden" id="questionCourseId">
                         <input type="hidden" id="questionLessonIndex">
                         <div class="mb-3">
-                            <label class="form-label">Soru Başlığı</label>
-                            <input type="text" class="form-control" id="questionTitle" required>
+                            <label class="form-label">Sorunuz</label>
+                            <textarea class="form-control" id="questionContent" rows="4" placeholder="Bu dersle ilgili sorunuzu yazın..." required></textarea>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Soru İçeriği</label>
-                            <textarea class="form-control" id="questionContent" rows="4" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Gönder</button>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-paper-plane me-2"></i>Soruyu Gönder
+                        </button>
                     </form>
                 </div>
             </div>

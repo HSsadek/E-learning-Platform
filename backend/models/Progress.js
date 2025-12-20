@@ -25,8 +25,8 @@ const progressSchema = new mongoose.Schema({
     progressPercentage: {
         type: Number,
         default: 0,
-        min: 0,
-        max: 100
+        min: 0
+        // max kısıtlaması kaldırıldı - pre-save hook'ta kontrol ediliyor
     },
     lastAccessedAt: {
         type: Date,
@@ -41,7 +41,11 @@ const progressSchema = new mongoose.Schema({
 // Progress yüzdesini otomatik hesapla
 progressSchema.pre('save', function(next) {
     if (this.totalLessons > 0) {
-        this.progressPercentage = Math.round((this.completedLessons.length / this.totalLessons) * 100);
+        const percentage = Math.round((this.completedLessons.length / this.totalLessons) * 100);
+        // Yüzde 100'ü geçemez
+        this.progressPercentage = Math.min(percentage, 100);
+    } else {
+        this.progressPercentage = 0;
     }
     next();
 });

@@ -57,7 +57,11 @@ function updateTeacherRecentActivities(data) {
         recentQuestionsDiv.innerHTML = data.recentQuestions.map(question => `
             <div class="mb-2">
                 <strong>${question.title}</strong><br>
-                <small class="text-muted">
+                <small class="text-muted d-flex align-items-center">
+                    ${question.student.profileImage ? 
+                        `<img src="${API_BASE_URL.replace('/api', '')}${question.student.profileImage}" class="rounded-circle me-1" style="width: 20px; height: 20px; object-fit: cover;">` :
+                        `<span class="rounded-circle me-1 bg-primary text-white d-inline-flex align-items-center justify-content-center" style="width: 20px; height: 20px; font-size: 10px;">${question.student.name.charAt(0).toUpperCase()}</span>`
+                    }
                     ${question.student.name} - ${question.course.title}
                 </small>
             </div>
@@ -620,28 +624,38 @@ function displayTeacherQuestions(questions) {
         <div class="card mb-3">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6>${question.title}</h6>
-                        <p>${question.content}</p>
-                        <small class="text-muted">
-                            <strong>Öğrenci:</strong> ${question.student.name} | 
-                            <strong>Kurs:</strong> ${question.courseName} | 
-                            <strong>Ders:</strong> ${question.lesson + 1}
-                        </small>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-start mb-2">
+                            ${question.student.profileImage ? 
+                                `<img src="${API_BASE_URL.replace('/api', '')}${question.student.profileImage}" class="rounded-circle me-2" style="width: 45px; height: 45px; object-fit: cover;">` :
+                                `<div class="rounded-circle me-2 bg-primary text-white d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; font-weight: bold;">${question.student.name.charAt(0).toUpperCase()}</div>`
+                            }
+                            <div>
+                                <strong>${question.student.name}</strong>
+                                <small class="text-muted ms-2">${question.courseName} | Ders ${question.lesson + 1}</small>
+                                <p class="mb-0 mt-1">${question.content}</p>
+                            </div>
+                        </div>
                         ${question.isAnswered ? `
-                            <div class="mt-2 p-2 bg-light rounded">
-                                <strong>Yanıtınız:</strong><br>
-                                ${question.answer.content}
-                                <br><small class="text-muted">
-                                    ${new Date(question.answer.answeredAt).toLocaleDateString('tr-TR')}
-                                </small>
+                            <div class="mt-2 p-2 bg-light rounded ms-5">
+                                <div class="d-flex align-items-start">
+                                    ${question.answer.answeredBy && question.answer.answeredBy.profileImage ? 
+                                        `<img src="${API_BASE_URL.replace('/api', '')}${question.answer.answeredBy.profileImage}" class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover;">` :
+                                        `<div class="rounded-circle me-2 bg-success text-white d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; font-size: 12px; font-weight: bold;">S</div>`
+                                    }
+                                    <div>
+                                        <strong>Yanıtınız</strong>
+                                        <small class="text-muted ms-2">${new Date(question.answer.answeredAt).toLocaleDateString('tr-TR')}</small>
+                                        <p class="mb-0 mt-1">${question.answer.content}</p>
+                                    </div>
+                                </div>
                             </div>
                         ` : ''}
                     </div>
-                    <div>
+                    <div class="ms-3">
                         ${question.isAnswered ? 
                             '<span class="badge bg-success">Yanıtlandı</span>' : 
-                            `<button class="btn btn-primary btn-sm" onclick="answerQuestion('${question._id}', '${question.title}', '${question.content}')">
+                            `<button class="btn btn-primary btn-sm" onclick="answerQuestion('${question._id}', '${question.content.replace(/'/g, "\\'")}')">
                                 Yanıtla
                             </button>`
                         }
@@ -653,12 +667,12 @@ function displayTeacherQuestions(questions) {
 }
 
 // Soru yanıtlama
-function answerQuestion(questionId, title, content) {
+function answerQuestion(questionId, content) {
     document.getElementById('answerQuestionId').value = questionId;
     document.getElementById('questionDetails').innerHTML = `
-        <h6>${title}</h6>
-        <p>${content}</p>
-        <hr>
+        <div class="alert alert-light">
+            <p class="mb-0">${content}</p>
+        </div>
     `;
     new bootstrap.Modal(document.getElementById('answerQuestionModal')).show();
 }

@@ -136,8 +136,15 @@ router.post('/:id/complete-lesson', auth, async (req, res) => {
     try {
         const { lessonIndex } = req.body;
         const Progress = require('../models/Progress');
+        const Course = require('../models/Course');
         
-        const progress = await Progress.findOne({
+        // Kursu al ve toplam ders sayısını kontrol et
+        const course = await Course.findById(req.params.id);
+        if (!course) {
+            return res.status(404).json({ message: 'Kurs bulunamadı' });
+        }
+        
+        let progress = await Progress.findOne({
             student: req.user.userId,
             course: req.params.id
         });
@@ -145,6 +152,9 @@ router.post('/:id/complete-lesson', auth, async (req, res) => {
         if (!progress) {
             return res.status(404).json({ message: 'Bu kursa kayıtlı değilsiniz' });
         }
+
+        // totalLessons değerini her zaman güncelle (kurs ders sayısı değişmiş olabilir)
+        progress.totalLessons = course.lessons.length;
 
         // Ders zaten tamamlanmış mı kontrol et
         const alreadyCompleted = progress.completedLessons.some(
@@ -156,15 +166,19 @@ router.post('/:id/complete-lesson', auth, async (req, res) => {
                 lessonIndex,
                 completedAt: new Date()
             });
-            progress.lastAccessedAt = new Date();
-            await progress.save();
         }
+        
+        progress.lastAccessedAt = new Date();
+        await progress.save();
 
         res.json({ 
-            message: 'Ders tamamlandı',
-            progressPercentage: progress.progressPercentage
+            message: alreadyCompleted ? 'Bu ders zaten tamamlanmış' : 'Ders tamamlandı',
+            progressPercentage: progress.progressPercentage,
+            completedLessons: progress.completedLessons.length,
+            totalLessons: progress.totalLessons
         });
     } catch (error) {
+        console.error('Ders tamamlama hatası:', error);
         res.status(500).json({ message: 'Sunucu hatası', error: error.message });
     }
 });

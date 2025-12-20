@@ -134,7 +134,7 @@ router.get('/dashboard', teacherAuth, async (req, res) => {
             course: { $in: courseIds },
             isAnswered: false 
         })
-        .populate('student', 'name email')
+        .populate('student', 'name email profileImage')
         .populate('course', 'title')
         .sort({ createdAt: -1 })
         .limit(5);
@@ -220,6 +220,8 @@ router.put('/courses/:id', teacherAuth, async (req, res) => {
             return res.status(404).json({ message: 'Kurs bulunamadı veya yetkiniz yok' });
         }
 
+        const oldLessonsCount = course.lessons.length;
+
         // Onaylanmış kurslar sadece belirli alanları güncelleyebilir
         if (course.status === 'approved') {
             const allowedFields = ['description', 'lessons'];
@@ -235,6 +237,17 @@ router.put('/courses/:id', teacherAuth, async (req, res) => {
         }
 
         await course.save();
+        
+        // Ders sayısı değiştiyse, tüm kayıtlı öğrencilerin Progress kayıtlarını güncelle
+        const newLessonsCount = course.lessons.length;
+        if (oldLessonsCount !== newLessonsCount) {
+            await Progress.updateMany(
+                { course: course._id },
+                { $set: { totalLessons: newLessonsCount } }
+            );
+            console.log(`Kurs ${course._id} ders sayısı ${oldLessonsCount} -> ${newLessonsCount} olarak güncellendi. Progress kayıtları güncellendi.`);
+        }
+        
         await course.populate('instructor', 'name email');
         
         res.json(course);
@@ -373,8 +386,8 @@ router.get('/courses/:id/questions', teacherAuth, async (req, res) => {
         }
 
         const questions = await Question.find(query)
-            .populate('student', 'name email')
-            .populate('answer.answeredBy', 'name email')
+            .populate('student', 'name email profileImage')
+            .populate('answer.answeredBy', 'name email profileImage')
             .sort({ createdAt: -1 });
 
         res.json(questions);

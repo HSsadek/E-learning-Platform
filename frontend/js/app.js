@@ -262,6 +262,7 @@ function updateAuthUI() {
     const authNav = document.getElementById('authNav');
     const userNav = document.getElementById('userNav');
     const userName = document.getElementById('userName');
+    const userAvatar = document.getElementById('userAvatar');
     const adminNavItem = document.getElementById('adminNavItem');
     const teacherNavItem = document.getElementById('teacherNavItem');
     const registerButton = document.getElementById('registerButton');
@@ -271,6 +272,20 @@ function updateAuthUI() {
         authNav.classList.add('d-none');
         userNav.classList.remove('d-none');
         userName.textContent = currentUser.name;
+        
+        // Kullanıcı avatarını güncelle
+        if (userAvatar) {
+            if (currentUser.profileImage) {
+                userAvatar.innerHTML = `<img src="${API_BASE_URL.replace('/api', '')}${currentUser.profileImage}" 
+                    class="rounded-circle" 
+                    style="width: 32px; height: 32px; object-fit: cover; border: 2px solid #667eea;">`;
+            } else {
+                userAvatar.innerHTML = `<div class="rounded-circle d-flex align-items-center justify-content-center" 
+                    style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: bold; font-size: 14px;">
+                    ${currentUser.name.charAt(0).toUpperCase()}
+                </div>`;
+            }
+        }
         
         // Giriş yapmış kullanıcılar için "Hemen Başla" butonunu gizle
         if (registerButton) {
@@ -304,6 +319,11 @@ function updateAuthUI() {
         adminNavItem.classList.add('d-none');
         teacherNavItem.classList.add('d-none');
         document.getElementById('studentNavItem').classList.add('d-none');
+        
+        // Avatar'ı sıfırla
+        if (userAvatar) {
+            userAvatar.innerHTML = '<i class="fas fa-user-circle" style="font-size: 24px;"></i>';
+        }
         
         // Giriş yapmamış kullanıcılar için "Hemen Başla" butonunu göster
         if (registerButton) {
@@ -495,50 +515,78 @@ function displayCourses(courses) {
     
     coursesList.innerHTML = courses.map(course => `
         <div class="col-md-4 mb-4">
-            <div class="card course-card h-100">
+            <div class="card course-card h-100 shadow-sm border-0" style="border-radius: 15px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s;">
+                <div class="card-header bg-gradient text-white p-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="badge bg-light text-dark">${getLevelText(course.level)}</span>
+                        <span class="badge ${course.price === 0 ? 'bg-success' : 'bg-warning text-dark'}">${course.price === 0 ? 'Ücretsiz' : course.price + ' TL'}</span>
+                    </div>
+                    <h5 class="card-title mt-2 mb-0 text-white">${course.title}</h5>
+                </div>
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">${course.title}</h5>
-                    <p class="card-text">${course.description.substring(0, 100)}...</p>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="course-level level-${course.level}">${getLevelText(course.level)}</span>
-                        <span class="course-price">${course.price === 0 ? 'Ücretsiz' : course.price + ' TL'}</span>
+                    <p class="card-text text-muted small">${course.description.substring(0, 80)}...</p>
+                    
+                    <!-- Eğitmen Bilgisi -->
+                    <div class="d-flex align-items-center mb-3 p-2 bg-light rounded">
+                        ${course.instructor.profileImage ? 
+                            `<img src="${API_BASE_URL.replace('/api', '')}${course.instructor.profileImage}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">` :
+                            `<div class="rounded-circle me-2 bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-weight: bold;">${course.instructor.name.charAt(0).toUpperCase()}</div>`
+                        }
+                        <div>
+                            <small class="fw-bold d-block">${course.instructor.name}</small>
+                            <small class="text-muted">Eğitmen</small>
+                        </div>
                     </div>
-                    <div class="mb-2">
-                        <small class="text-muted">
-                            <i class="fas fa-user"></i> ${course.instructor.name}<br>
-                            <i class="fas fa-clock"></i> ${course.duration} dakika<br>
-                            <i class="fas fa-users"></i> ${course.students.length} öğrenci
-                        </small>
-                        ${course.averageRating > 0 ? `
-                            <div class="mt-1">
-                                <span class="text-warning">
-                                    ${generateStars(course.averageRating)}
-                                </span>
-                                <small class="text-muted">(${course.reviewCount} değerlendirme)</small>
+                    
+                    <!-- Kurs İstatistikleri -->
+                    <div class="row text-center mb-3 g-2">
+                        <div class="col-4">
+                            <div class="p-2 bg-light rounded">
+                                <i class="fas fa-clock text-primary"></i>
+                                <small class="d-block text-muted">${course.duration} dk</small>
                             </div>
-                        ` : ''}
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 bg-light rounded">
+                                <i class="fas fa-users text-success"></i>
+                                <small class="d-block text-muted">${course.students.length}</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 bg-light rounded">
+                                <i class="fas fa-book text-info"></i>
+                                <small class="d-block text-muted">${course.lessons ? course.lessons.length : 0} ders</small>
+                            </div>
+                        </div>
                     </div>
+                    
+                    ${course.averageRating > 0 ? `
+                        <div class="mb-3 text-center">
+                            <span class="text-warning">${generateStars(course.averageRating)}</span>
+                            <small class="text-muted ms-1">${course.averageRating.toFixed(1)} (${course.reviewCount})</small>
+                        </div>
+                    ` : ''}
+                    
                     <div class="mt-auto">
-                        <button class="btn btn-outline-info btn-sm w-100 mb-2" onclick="showCourseDetail('${course._id}')">
-                            Detayları Gör
+                        <button class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="showCourseDetail('${course._id}')" style="border-radius: 20px;">
+                            <i class="fas fa-eye me-1"></i> Detayları Gör
                         </button>
                         ${currentUser ? 
-                            // Kullanıcı giriş yapmış - kayıtlı mı kontrol et
                             (course.students && course.students.some(student => 
                                 (typeof student === 'string' ? student : student._id) === currentUser.id || 
                                 (typeof student === 'string' ? student : student._id) === currentUser._id
                             )) ? `
-                                <div class="btn btn-success w-100 disabled">
-                                    <i class="fas fa-check me-2"></i>Kayıtlısınız
-                                </div>
+                                <button class="btn btn-success w-100 disabled" style="border-radius: 20px;">
+                                    <i class="fas fa-check me-1"></i> Kayıtlısınız
+                                </button>
                             ` : `
-                                <button class="btn btn-primary w-100" onclick="enrollCourse('${course._id}')">
-                                    <i class="fas fa-plus me-2"></i>Kursa Kayıt Ol
+                                <button class="btn btn-primary w-100" onclick="enrollCourse('${course._id}')" style="border-radius: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                                    <i class="fas fa-plus me-1"></i> Kursa Kayıt Ol
                                 </button>
                             `
                         : `
-                            <button class="btn btn-outline-primary w-100" onclick="showPage('login')">
-                                <i class="fas fa-sign-in-alt me-2"></i>Kayıt için giriş yapın
+                            <button class="btn btn-outline-secondary w-100" onclick="showPage('login')" style="border-radius: 20px;">
+                                <i class="fas fa-sign-in-alt me-1"></i> Giriş Yapın
                             </button>
                         `}
                     </div>

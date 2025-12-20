@@ -11,32 +11,51 @@ const router = express.Router();
 // Kurs arama ve filtreleme
 router.get('/search', async (req, res) => {
     try {
-        const { query, category, level, instructor } = req.query;
+        const { q, query, category, level, instructor, minPrice, maxPrice } = req.query;
         
-        // Arama filtreleri oluştur
-        let searchFilter = {};
+        // Arama filtreleri oluştur - sadece onaylanmış kurslar
+        let searchFilter = { status: 'approved' };
         
-        if (query) {
-            searchFilter.$or = [
-                { title: { $regex: query, $options: 'i' } },
-                { description: { $regex: query, $options: 'i' } }
-            ];
+        // q veya query parametresini kullan (frontend q gönderiyor)
+        const searchTerm = q || query;
+        if (searchTerm) {
+            // $and kullanarak status ve $or'u birleştir
+            searchFilter = {
+                status: 'approved',
+                $or: [
+                    { title: { $regex: searchTerm, $options: 'i' } },
+                    { description: { $regex: searchTerm, $options: 'i' } }
+                ]
+            };
         }
         
-        if (category) {
+        if (category && category !== 'all') {
             searchFilter.category = category;
         }
         
-        if (level) {
+        if (level && level !== 'all') {
             searchFilter.level = level;
         }
         
         if (instructor) {
             searchFilter.instructor = instructor;
         }
+        
+        // Fiyat filtreleme
+        if (minPrice !== undefined || maxPrice !== undefined) {
+            searchFilter.price = {};
+            if (minPrice !== undefined) {
+                searchFilter.price.$gte = parseFloat(minPrice);
+            }
+            if (maxPrice !== undefined) {
+                searchFilter.price.$lte = parseFloat(maxPrice);
+            }
+        }
+        
+        console.log('Search filter:', JSON.stringify(searchFilter)); // Debug log
 
         const courses = await Course.find(searchFilter)
-            .populate('instructor', 'name email')
+            .populate('instructor', 'name email profileImage')
             .populate('students', 'name')
             .sort({ createdAt: -1 });
 
@@ -75,7 +94,7 @@ router.get('/dashboard', auth, async (req, res) => {
                 path: 'enrolledCourses',
                 populate: {
                     path: 'instructor',
-                    select: 'name email'
+                    select: 'name email profileImage'
                 }
             });
 
@@ -148,7 +167,7 @@ router.get('/courses/:id', auth, async (req, res) => {
         const courseId = req.params.id;
 
         const course = await Course.findById(courseId)
-            .populate('instructor', 'name email')
+            .populate('instructor', 'name email profileImage')
             .populate('students', 'name');
 
         if (!course) {
@@ -208,7 +227,7 @@ router.get('/courses/:id/lesson/:lessonIndex', auth, async (req, res) => {
         const lessonIndex = parseInt(req.params.lessonIndex);
 
         const course = await Course.findById(courseId)
-            .populate('instructor', 'name email');
+            .populate('instructor', 'name email profileImage');
 
         if (!course) {
             return res.status(404).json({ message: 'Kurs bulunamadı' });
@@ -238,8 +257,8 @@ router.get('/courses/:id/lesson/:lessonIndex', auth, async (req, res) => {
             course: courseId,
             lesson: lessonIndex
         })
-        .populate('student', 'name')
-        .populate('answer.answeredBy', 'name')
+        .populate('student', 'name profileImage')
+        .populate('answer.answeredBy', 'name profileImage')
         .sort({ createdAt: -1 });
 
         res.json({
@@ -331,7 +350,8 @@ router.get('/my-questions', auth, async (req, res) => {
         
         const questions = await Question.find({ student: studentId })
             .populate('course', 'title')
-            .populate('answer.answeredBy', 'name')
+            .populate('student', 'name profileImage')
+            .populate('answer.answeredBy', 'name profileImage')
             .sort({ createdAt: -1 });
 
         res.json(questions);
@@ -368,7 +388,7 @@ router.get('/recommendations', auth, async (req, res) => {
             _id: { $nin: enrolledCourseIds },
             status: 'approved'
         })
-        .populate('instructor', 'name')
+        .populate('instructor', 'name profileImage')
         .sort({ 'students.length': -1 }) // En çok öğrencisi olan kurslar
         .limit(6);
 

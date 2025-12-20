@@ -4,9 +4,40 @@ const User = require('../models/User');
 const Progress = require('../models/Progress');
 const Question = require('../models/Question');
 const Review = require('../models/Review');
+const Announcement = require('../models/Announcement');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
+
+// Duyuruları getir (public - herkes görebilir)
+router.get('/announcements', async (req, res) => {
+    try {
+        const { role } = req.query;
+        
+        // Filtre oluştur
+        let filter = {};
+        
+        if (role) {
+            // Kullanıcı rolüne göre duyuruları filtrele
+            filter.$or = [
+                { targetAudience: 'all' },
+                { targetAudience: role === 'student' ? 'students' : role === 'teacher' ? 'teachers' : 'all' }
+            ];
+        } else {
+            // Rol belirtilmemişse sadece herkese açık duyuruları göster
+            filter.targetAudience = 'all';
+        }
+        
+        const announcements = await Announcement.find(filter)
+            .populate('createdBy', 'name')
+            .sort({ createdAt: -1 })
+            .limit(10);
+        
+        res.json(announcements);
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
 
 // Kurs arama ve filtreleme
 router.get('/search', async (req, res) => {

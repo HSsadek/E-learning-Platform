@@ -1,8 +1,19 @@
 const express = require('express');
 const Course = require('../models/Course');
+const Category = require('../models/Category');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
+
+// Aktif kategorileri getir (public endpoint)
+router.get('/categories', async (req, res) => {
+    try {
+        const categories = await Category.find({ isActive: true }).sort({ name: 1 });
+        res.json(categories);
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
 
 // Tüm kursları getir (sadece onaylanmış)
 router.get('/', async (req, res) => {

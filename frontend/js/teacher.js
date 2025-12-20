@@ -1,7 +1,139 @@
+// Kategorileri yükle
+async function loadCategories() {
+    console.log('loadCategories çağrıldı');
+    try {
+        const response = await fetch(`${API_BASE_URL}/courses/categories`);
+        console.log('Kategori response status:', response.status);
+        if (response.ok) {
+            const categories = await response.json();
+            console.log('Kategoriler:', categories);
+            const categorySelect = document.getElementById('courseCategory');
+            console.log('categorySelect elementi:', categorySelect);
+            if (categorySelect) {
+                categorySelect.innerHTML = '<option value="">Kategori Seçin...</option>' +
+                    categories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+                console.log('Kategori select güncellendi');
+            }
+        } else {
+            console.error('Kategori yükleme hatası:', response.status);
+        }
+    } catch (error) {
+        console.error('Kategoriler yüklenirken hata:', error);
+    }
+}
+
+// Öğretmen duyurularını yükle
+async function loadTeacherAnnouncements() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/student/announcements?role=teacher`);
+        
+        if (response.ok) {
+            const announcements = await response.json();
+            displayTeacherAnnouncements(announcements);
+        }
+    } catch (error) {
+        console.error('Duyurular yüklenirken hata:', error);
+    }
+}
+
+// Öğretmen duyurularını göster
+function displayTeacherAnnouncements(announcements) {
+    const section = document.getElementById('teacherAnnouncementsSection');
+    const container = document.getElementById('teacherAnnouncements');
+    
+    if (!section || !container) return;
+    
+    if (announcements.length === 0) {
+        section.classList.add('d-none');
+        return;
+    }
+    
+    section.classList.remove('d-none');
+    
+    container.innerHTML = announcements.map(announcement => `
+        <div class="alert alert-${announcement.type || 'info'} alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-start">
+                <div class="me-3">
+                    <i class="fas ${getTeacherAnnouncementIcon(announcement.type)} fa-lg"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h6 class="alert-heading mb-1">${announcement.title}</h6>
+                    <p class="mb-1">${announcement.content}</p>
+                    <small class="text-muted">
+                        ${announcement.createdBy ? announcement.createdBy.name : 'Admin'} • 
+                        ${new Date(announcement.createdAt).toLocaleDateString('tr-TR')}
+                    </small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Duyuru ikonu
+function getTeacherAnnouncementIcon(type) {
+    const icons = {
+        'info': 'fa-info-circle',
+        'warning': 'fa-exclamation-triangle',
+        'success': 'fa-check-circle',
+        'danger': 'fa-times-circle'
+    };
+    return icons[type] || 'fa-bullhorn';
+}
+
+// Öğretmen tab değişikliklerini dinle
+document.addEventListener('DOMContentLoaded', function() {
+    const teacherTabs = document.querySelectorAll('#teacherTabs button[data-bs-toggle="tab"]');
+    teacherTabs.forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function(event) {
+            const target = event.target.getAttribute('data-bs-target');
+            
+            if (target === '#create-course') {
+                // Yeni Kurs tab'ına geçildiğinde kategorileri yükle
+                loadCategories();
+            } else if (target === '#my-courses') {
+                loadTeacherCourses();
+            } else if (target === '#questions') {
+                loadTeacherQuestions();
+            } else if (target === '#video-gallery') {
+                if (typeof loadVideoGallery === 'function') {
+                    loadVideoGallery();
+                }
+            } else if (target === '#earnings') {
+                if (typeof loadTeacherEarnings === 'function') {
+                    loadTeacherEarnings();
+                }
+            }
+        });
+    });
+});
+
+// Fiyat input toggle
+function togglePriceInput() {
+    const priceType = document.getElementById('coursePriceType').value;
+    const priceContainer = document.getElementById('priceInputContainer');
+    const priceInput = document.getElementById('coursePrice');
+    
+    if (priceType === 'paid') {
+        priceContainer.style.display = 'block';
+        priceInput.required = true;
+    } else {
+        priceContainer.style.display = 'none';
+        priceInput.required = false;
+        priceInput.value = '';
+    }
+}
+
 // Öğretmen Dashboard yükleme
 async function loadTeacherDashboard() {
     console.log('loadTeacherDashboard çağrıldı, currentUser:', currentUser);
     console.log('authToken:', authToken ? 'var' : 'yok');
+    
+    // Kategorileri yükle
+    loadCategories();
+    
+    // Duyuruları yükle
+    loadTeacherAnnouncements();
     
     if (!authToken) {
         showAlert('Lütfen giriş yapın!', 'danger');
@@ -190,13 +322,23 @@ document.getElementById('createCourseForm').addEventListener('submit', async (e)
     const editStatus = form.getAttribute('data-edit-status');
     const isEditing = !!editId;
     
+    // Fiyat hesaplama
+    const priceType = document.getElementById('coursePriceType').value;
+    const priceValue = priceType === 'free' ? 0 : parseFloat(document.getElementById('coursePrice').value) || 0;
+    
+    // Ücretli seçildi ama fiyat girilmedi kontrolü
+    if (priceType === 'paid' && priceValue <= 0) {
+        showAlert('Ücretli kurs için geçerli bir fiyat girin!', 'warning');
+        return;
+    }
+    
     const courseData = {
         title: document.getElementById('courseTitle').value,
         description: document.getElementById('courseDescription').value,
         category: document.getElementById('courseCategory').value,
         level: document.getElementById('courseLevel').value,
         duration: parseInt(document.getElementById('courseDuration').value),
-        price: parseFloat(document.getElementById('coursePrice').value),
+        price: priceValue,
         lessons: getLessonsData()
     };
 
@@ -234,6 +376,9 @@ document.getElementById('createCourseForm').addEventListener('submit', async (e)
             form.removeAttribute('data-edit-id');
             form.removeAttribute('data-edit-status');
             resetLessons();
+            
+            // Fiyat alanını gizle
+            document.getElementById('priceInputContainer').style.display = 'none';
             
             // Başlığı sıfırla
             const titleElement = document.querySelector('#create-course .card-header h5');
@@ -877,7 +1022,17 @@ async function editCourse(courseId) {
             document.getElementById('courseCategory').value = course.category;
             document.getElementById('courseLevel').value = course.level;
             document.getElementById('courseDuration').value = course.duration;
-            document.getElementById('coursePrice').value = course.price;
+            
+            // Fiyat alanlarını doldur
+            if (course.price > 0) {
+                document.getElementById('coursePriceType').value = 'paid';
+                document.getElementById('coursePrice').value = course.price;
+                document.getElementById('priceInputContainer').style.display = 'block';
+            } else {
+                document.getElementById('coursePriceType').value = 'free';
+                document.getElementById('coursePrice').value = '';
+                document.getElementById('priceInputContainer').style.display = 'none';
+            }
 
             // Mevcut dersleri temizle
             document.getElementById('lessonsContainer').innerHTML = '';

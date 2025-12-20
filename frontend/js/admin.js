@@ -2,22 +2,34 @@
 
 // Admin Dashboard yükleme
 async function loadAdminDashboard() {
+    console.log('loadAdminDashboard çağrıldı');
+    console.log('authToken:', authToken ? 'var' : 'yok');
+    console.log('currentUser:', currentUser);
+    
     if (!authToken || !currentUser || currentUser.role !== 'admin') {
+        console.log('Admin yetkisi yok, return');
         showAlert('Admin yetkisi gereklidir!', 'danger');
         return;
     }
 
     try {
+        console.log('Admin dashboard API çağrısı yapılıyor...');
         const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
             headers: {
                 'Authorization': `Bearer ${authToken}`
             }
         });
 
+        console.log('Admin dashboard response status:', response.status);
+        
         if (response.ok) {
             const data = await response.json();
+            console.log('Admin dashboard verisi:', data);
             updateDashboardStats(data.stats);
             updateRecentActivities(data.recentActivities);
+        } else {
+            const errorData = await response.json();
+            console.error('Admin dashboard hatası:', errorData);
         }
         
         // Kullanıcıları da yükle
@@ -309,14 +321,14 @@ function displayPendingCourses(courses) {
                         <p><strong>Fiyat:</strong> ${course.price === 0 ? 'Ücretsiz' : course.price + ' TL'}</p>
                     </div>
                     <div class="col-md-4 text-end">
-                        <button class="btn btn-primary mb-2" onclick="reviewCourse('${course._id}')">
-                            İncele
+                        <button class="btn btn-info mb-2" onclick="previewPendingCourse('${course._id}')">
+                            <i class="fas fa-eye me-1"></i> İncele
                         </button><br>
                         <button class="btn btn-success mb-2" onclick="approveCourse('${course._id}')">
-                            Onayla
+                            <i class="fas fa-check me-1"></i> Onayla
                         </button><br>
                         <button class="btn btn-danger" onclick="rejectCourse('${course._id}')">
-                            Reddet
+                            <i class="fas fa-times me-1"></i> Reddet
                         </button>
                     </div>
                 </div>
@@ -325,8 +337,8 @@ function displayPendingCourses(courses) {
     `).join('');
 }
 
-// Kurs inceleme
-async function reviewCourse(courseId) {
+// Kurs inceleme (sadece detay gösterme) - Admin için
+async function previewPendingCourse(courseId) {
     try {
         const response = await fetch(`${API_BASE_URL}/courses/${courseId}`, {
             headers: {
@@ -336,14 +348,68 @@ async function reviewCourse(courseId) {
 
         if (response.ok) {
             const course = await response.json();
-            showCourseDetails(course);
+            showCoursePreview(course);
         }
     } catch (error) {
         console.error('Kurs detayları yüklenirken hata:', error);
     }
 }
 
-// Kurs detaylarını göster
+// Kurs önizleme (sadece inceleme - değerlendirme yok)
+function showCoursePreview(course) {
+    const detailsDiv = document.getElementById('coursePreviewDetails');
+    detailsDiv.innerHTML = `
+        <div class="row">
+            <div class="col-md-8">
+                <h4 class="mb-3">${course.title}</h4>
+                <p class="text-muted">${course.description}</p>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong><i class="fas fa-user me-2"></i>Eğitmen:</strong> ${course.instructor.name}</p>
+                        <p class="mb-1"><strong><i class="fas fa-folder me-2"></i>Kategori:</strong> ${course.category}</p>
+                        <p class="mb-1"><strong><i class="fas fa-signal me-2"></i>Seviye:</strong> ${getLevelText(course.level)}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong><i class="fas fa-clock me-2"></i>Süre:</strong> ${course.duration} dakika</p>
+                        <p class="mb-1"><strong><i class="fas fa-tag me-2"></i>Fiyat:</strong> ${course.price === 0 ? 'Ücretsiz' : course.price + ' TL'}</p>
+                        <p class="mb-1"><strong><i class="fas fa-book me-2"></i>Ders Sayısı:</strong> ${course.lessons ? course.lessons.length : 0}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <hr>
+        
+        <h6><i class="fas fa-list me-2"></i>Ders İçerikleri</h6>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Ders Başlığı</th>
+                        <th>Süre</th>
+                        <th>Video</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${course.lessons && course.lessons.length > 0 ? course.lessons.map((lesson, index) => `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${lesson.title}</td>
+                            <td>${lesson.duration} dk</td>
+                            <td>${lesson.videoUrl ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-muted"></i>'}</td>
+                        </tr>
+                    `).join('') : '<tr><td colspan="4" class="text-center text-muted">Ders eklenmemiş</td></tr>'}
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    new bootstrap.Modal(document.getElementById('coursePreviewModal')).show();
+}
+
+// Kurs detaylarını göster (değerlendirme modalı için)
 function showCourseDetails(course) {
     const detailsDiv = document.getElementById('courseDetails');
     detailsDiv.innerHTML = `
@@ -528,32 +594,66 @@ async function loadAnnouncements() {
 // Duyuruları göster
 function displayAnnouncements(announcements) {
     const content = document.getElementById('announcementsContent');
-    
+
     if (announcements.length === 0) {
         content.innerHTML = '<div class="alert alert-info">Henüz duyuru bulunmuyor.</div>';
         return;
     }
 
-    content.innerHTML = announcements.map(announcement => `
+    content.innerHTML = announcements
+        .map(
+            (announcement) => `
         <div class="card mb-3">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
-                    <div>
+                    <div class="flex-grow-1">
                         <h5>${announcement.title}</h5>
                         <p>${announcement.content}</p>
                         <small class="text-muted">
-                            Oluşturan: ${announcement.createdBy.name} | 
+                            Oluşturan: ${announcement.createdBy ? announcement.createdBy.name : 'Admin'} | 
                             ${new Date(announcement.createdAt).toLocaleDateString('tr-TR')}
                         </small>
                     </div>
-                    <div>
-                        <span class="badge bg-${announcement.type}">${getAnnouncementTypeText(announcement.type)}</span>
-                        <span class="badge bg-secondary">${getTargetAudienceText(announcement.targetAudience)}</span>
+                    <div class="d-flex flex-column align-items-end gap-2">
+                        <div>
+                            <span class="badge bg-${announcement.type}">${getAnnouncementTypeText(announcement.type)}</span>
+                            <span class="badge bg-secondary">${getTargetAudienceText(announcement.targetAudience)}</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteAnnouncement('${announcement._id}', '${announcement.title.replace(/'/g, "\\'")}')">
+                            <i class="fas fa-trash me-1"></i> Sil
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-    `).join('');
+    `
+        )
+        .join('');
+}
+
+// Duyuru silme
+async function deleteAnnouncement(id, title) {
+    if (!confirm(`"${title}" duyurusunu silmek istediğinizden emin misiniz?`)) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/announcements/${id}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${authToken}`,
+            },
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showAlert('Duyuru silindi!', 'success');
+            loadAnnouncements();
+        } else {
+            showAlert(data.message || 'Duyuru silinemedi!', 'danger');
+        }
+    } catch (error) {
+        showAlert('Bağlantı hatası!', 'danger');
+    }
 }
 
 // Tab değişikliklerini dinle
@@ -563,10 +663,14 @@ document.addEventListener('DOMContentLoaded', function() {
         tab.addEventListener('shown.bs.tab', function(event) {
             const target = event.target.getAttribute('data-bs-target');
             
-            if (target === '#users') {
+            if (target === '#dashboard') {
+                loadAdminDashboard();
+            } else if (target === '#users') {
                 loadUsers();
             } else if (target === '#courses') {
                 loadPendingCourses();
+            } else if (target === '#categories') {
+                loadAdminCategories();
             } else if (target === '#teacher-applications') {
                 loadTeacherApplications();
             } else if (target === '#announcements') {
@@ -937,4 +1041,195 @@ function showModernAlert({ type, title, message, icon, duration = 4000 }) {
             }, 300);
         }
     }, duration);
+}
+
+
+// ==================== KATEGORİ YÖNETİMİ ====================
+
+// Kategorileri yükle
+async function loadAdminCategories() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/categories`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        if (response.ok) {
+            const categories = await response.json();
+            displayAdminCategories(categories);
+        }
+    } catch (error) {
+        console.error('Kategoriler yüklenirken hata:', error);
+    }
+}
+
+// Kategorileri göster
+function displayAdminCategories(categories) {
+    const content = document.getElementById('categoriesContent');
+    
+    if (!content) return;
+    
+    if (categories.length === 0) {
+        content.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">Henüz kategori eklenmemiş</h5>
+                <button class="btn btn-primary mt-3" onclick="showAddCategoryModal()">
+                    <i class="fas fa-plus me-2"></i>İlk Kategoriyi Ekle
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    content.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-0">Kategoriler (${categories.length})</h5>
+            <button class="btn btn-primary" onclick="showAddCategoryModal()">
+                <i class="fas fa-plus me-2"></i>Yeni Kategori
+            </button>
+        </div>
+        <div class="row">
+            ${categories.map(cat => `
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100" style="border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="me-3 d-flex align-items-center justify-content-center" 
+                                     style="width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                    <i class="fas fa-folder text-white"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">${cat.name}</h6>
+                                    <span class="badge ${cat.isActive ? 'bg-success' : 'bg-secondary'}">${cat.isActive ? 'Aktif' : 'Pasif'}</span>
+                                </div>
+                            </div>
+                            <p class="text-muted small mb-3">${cat.description || 'Açıklama yok'}</p>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editCategory('${cat._id}', '${cat.name}', '${(cat.description || '').replace(/'/g, "\\'")}', ${cat.isActive})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-${cat.isActive ? 'warning' : 'success'}" onclick="toggleCategoryStatus('${cat._id}', ${!cat.isActive})">
+                                    <i class="fas fa-${cat.isActive ? 'eye-slash' : 'eye'}"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory('${cat._id}', '${cat.name}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// Kategori ekleme modalını göster
+function showAddCategoryModal() {
+    document.getElementById('categoryModalTitle').textContent = 'Yeni Kategori Ekle';
+    document.getElementById('categoryForm').reset();
+    document.getElementById('categoryId').value = '';
+    document.getElementById('categoryIsActive').checked = true;
+    new bootstrap.Modal(document.getElementById('categoryModal')).show();
+}
+
+// Kategori düzenleme
+function editCategory(id, name, description, isActive) {
+    document.getElementById('categoryModalTitle').textContent = 'Kategori Düzenle';
+    document.getElementById('categoryId').value = id;
+    document.getElementById('categoryName').value = name;
+    document.getElementById('categoryDescription').value = description;
+    document.getElementById('categoryIsActive').checked = isActive;
+    new bootstrap.Modal(document.getElementById('categoryModal')).show();
+}
+
+// Kategori kaydet
+document.addEventListener('DOMContentLoaded', function() {
+    const categoryForm = document.getElementById('categoryForm');
+    if (categoryForm) {
+        categoryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('categoryId').value;
+            
+            const data = {
+                name: document.getElementById('categoryName').value,
+                description: document.getElementById('categoryDescription').value,
+                isActive: document.getElementById('categoryIsActive').checked
+            };
+
+            try {
+                const url = id ? `${API_BASE_URL}/admin/categories/${id}` : `${API_BASE_URL}/admin/categories`;
+                const method = id ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert(id ? 'Kategori güncellendi!' : 'Kategori eklendi!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
+                    loadAdminCategories();
+                } else {
+                    showAlert(result.message || 'Hata oluştu!', 'danger');
+                }
+            } catch (error) {
+                showAlert('Bağlantı hatası!', 'danger');
+            }
+        });
+    }
+});
+
+// Kategori durumunu değiştir
+async function toggleCategoryStatus(id, newStatus) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/categories/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ isActive: newStatus })
+        });
+
+        if (response.ok) {
+            showAlert(`Kategori ${newStatus ? 'aktif' : 'pasif'} yapıldı!`, 'success');
+            loadAdminCategories();
+        }
+    } catch (error) {
+        showAlert('Bağlantı hatası!', 'danger');
+    }
+}
+
+// Kategori sil
+async function deleteCategory(id, name) {
+    if (!confirm(`"${name}" kategorisini silmek istediğinizden emin misiniz?`)) return;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/categories/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showAlert('Kategori silindi!', 'success');
+            loadAdminCategories();
+        } else {
+            showAlert(data.message || 'Hata oluştu!', 'danger');
+        }
+    } catch (error) {
+        showAlert('Bağlantı hatası!', 'danger');
+    }
 }

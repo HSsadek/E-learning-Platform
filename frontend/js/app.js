@@ -102,7 +102,12 @@ function showPage(pageName) {
             loadCurrentProfileImage();
         }, 100);
     } else if (pageName === 'admin' && currentUser && currentUser.role === 'admin') {
-        loadAdminDashboard();
+        console.log('Admin sayfası açılıyor, loadAdminDashboard çağrılıyor...');
+        if (typeof loadAdminDashboard === 'function') {
+            loadAdminDashboard();
+        } else {
+            console.error('loadAdminDashboard fonksiyonu bulunamadı!');
+        }
     } else if (pageName === 'teacher' && currentUser) {
         // Öğretmen veya admin olabilir
         console.log('Teacher sayfası açılıyor, rol:', currentUser.role);
@@ -417,8 +422,28 @@ function displayProfile(user) {
     }, 100);
 }
 
+// Kategorileri yükle (filtreleme için)
+async function loadCategoriesForFilter() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/courses/categories`);
+        if (response.ok) {
+            const categories = await response.json();
+            const categoryFilter = document.getElementById('categoryFilter');
+            if (categoryFilter) {
+                categoryFilter.innerHTML = '<option value="all">Tüm Kategoriler</option>' +
+                    categories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+            }
+        }
+    } catch (error) {
+        console.error('Kategoriler yüklenirken hata:', error);
+    }
+}
+
 // Kursları yükleme (Ana kurslar sayfası için - tüm kurslar)
 async function loadCourses() {
+    // Kategorileri de yükle
+    loadCategoriesForFilter();
+    
     try {
         const response = await fetch(`${API_BASE_URL}/student/search`);
         const data = await response.json();

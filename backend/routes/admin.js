@@ -1,4 +1,7 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const User = require('../models/User');
 const Course = require('../models/Course');
 const Category = require('../models/Category');
@@ -8,6 +11,35 @@ const adminAuth = require('../middleware/adminAuth');
 const router = express.Router();
 
 console.log('🚀 Admin routes yüklendi!'); // Debug
+
+// Kategori resmi için multer konfigürasyonu
+const categoryStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const categoriesDir = path.join(__dirname, '../uploads/categories');
+        if (!fs.existsSync(categoriesDir)) {
+            fs.mkdirSync(categoriesDir, { recursive: true });
+        }
+        cb(null, categoriesDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'category-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const categoryImageFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+    } else {
+        cb(new Error('Sadece resim dosyaları yüklenebilir!'), false);
+    }
+};
+
+const categoryUpload = multer({
+    storage: categoryStorage,
+    fileFilter: categoryImageFilter,
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
 
 // Dashboard istatistikleri
 router.get('/dashboard', adminAuth, async (req, res) => {
@@ -243,6 +275,20 @@ router.get('/categories', adminAuth, async (req, res) => {
     }
 });
 
+// Kategori resmi yükle
+router.post('/categories/upload-image', adminAuth, categoryUpload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'Resim dosyası gerekli' });
+        }
+        
+        const imagePath = '/uploads/categories/' + req.file.filename;
+        res.json({ imagePath });
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
 router.post('/categories', adminAuth, async (req, res) => {
     try {
         const category = new Category(req.body);
@@ -266,6 +312,29 @@ router.put('/categories/:id', adminAuth, async (req, res) => {
         }
         
         res.json(category);
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
+router.delete('/categories/:id', adminAuth, async (req, res) => {
+    try {
+        const category = await Category.findById(req.params.id);
+        
+        if (!category) {
+            return res.status(404).json({ message: 'Kategori bulunamadı' });
+        }
+        
+        // Eski resmi sil
+        if (category.image) {
+            const imagePath = path.join(__dirname, '..', category.image);
+            if (fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
+            }
+        }
+        
+        await Category.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Kategori silindi' });
     } catch (error) {
         res.status(500).json({ message: 'Sunucu hatası', error: error.message });
     }

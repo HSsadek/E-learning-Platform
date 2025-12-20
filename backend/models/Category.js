@@ -11,10 +11,6 @@ const categorySchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    icon: {
-        type: String,
-        default: 'fas fa-book'
-    },
     isActive: {
         type: Boolean,
         default: true

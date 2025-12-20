@@ -13,6 +13,9 @@ async function loadStudentDashboard() {
         return;
     }
 
+    // Duyuruları yükle
+    loadStudentAnnouncements();
+
     try {
         console.log('Dashboard API çağrısı yapılıyor...');
         const response = await fetch(`${API_BASE_URL}/student/dashboard`, {
@@ -37,6 +40,66 @@ async function loadStudentDashboard() {
         console.error('Öğrenci dashboard yüklenirken hata:', error);
         showAlert('Bağlantı hatası!', 'danger');
     }
+}
+
+// Öğrenci duyurularını yükle
+async function loadStudentAnnouncements() {
+    try {
+        const role = currentUser ? currentUser.role : '';
+        const response = await fetch(`${API_BASE_URL}/student/announcements?role=${role}`);
+        
+        if (response.ok) {
+            const announcements = await response.json();
+            displayStudentAnnouncements(announcements);
+        }
+    } catch (error) {
+        console.error('Duyurular yüklenirken hata:', error);
+    }
+}
+
+// Duyuruları göster
+function displayStudentAnnouncements(announcements) {
+    const section = document.getElementById('studentAnnouncementsSection');
+    const container = document.getElementById('studentAnnouncements');
+    
+    if (!section || !container) return;
+    
+    if (announcements.length === 0) {
+        section.classList.add('d-none');
+        return;
+    }
+    
+    section.classList.remove('d-none');
+    
+    container.innerHTML = announcements.map(announcement => `
+        <div class="alert alert-${announcement.type || 'info'} alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-start">
+                <div class="me-3">
+                    <i class="fas ${getAnnouncementIcon(announcement.type)} fa-lg"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h6 class="alert-heading mb-1">${announcement.title}</h6>
+                    <p class="mb-1">${announcement.content}</p>
+                    <small class="text-muted">
+                        ${announcement.createdBy ? announcement.createdBy.name : 'Admin'} • 
+                        ${new Date(announcement.createdAt).toLocaleDateString('tr-TR')}
+                    </small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Duyuru ikonu
+function getAnnouncementIcon(type) {
+    const icons = {
+        'info': 'fa-info-circle',
+        'warning': 'fa-exclamation-triangle',
+        'success': 'fa-check-circle',
+        'danger': 'fa-times-circle'
+    };
+    return icons[type] || 'fa-bullhorn';
 }
 
 // Öğrenci dashboard istatistiklerini güncelle

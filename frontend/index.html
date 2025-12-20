@@ -369,11 +369,7 @@
                 <div class="col-md-2">
                     <select class="form-control" id="categoryFilter">
                         <option value="all">Tüm Kategoriler</option>
-                        <option value="Programlama">Programlama</option>
-                        <option value="Web Tasarım">Web Tasarım</option>
-                        <option value="Veri Bilimi">Veri Bilimi</option>
-                        <option value="Mobil Uygulama">Mobil Uygulama</option>
-                        <option value="Pazarlama">Pazarlama</option>
+                        <!-- Kategoriler dinamik olarak yüklenecek -->
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -699,6 +695,11 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button" role="tab">
+                        <i class="fas fa-folder"></i> Kategoriler
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" id="teacher-applications-tab" data-bs-toggle="tab" data-bs-target="#teacher-applications" type="button" role="tab">
                         <i class="fas fa-chalkboard-teacher"></i> Öğretmen Başvuruları
                     </button>
@@ -870,6 +871,46 @@
                         <!-- Duyurular buraya yüklenecek -->
                     </div>
                 </div>
+                
+                <!-- Categories Tab -->
+                <div class="tab-pane fade" id="categories" role="tabpanel">
+                    <div id="categoriesContent">
+                        <!-- Kategoriler buraya yüklenecek -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Modal -->
+        <div class="modal fade" id="categoryModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="categoryModalTitle">Yeni Kategori Ekle</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form id="categoryForm">
+                        <div class="modal-body">
+                            <input type="hidden" id="categoryId">
+                            <div class="mb-3">
+                                <label class="form-label">Kategori Adı</label>
+                                <input type="text" class="form-control" id="categoryName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Açıklama</label>
+                                <textarea class="form-control" id="categoryDescription" rows="3"></textarea>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="categoryIsActive" checked>
+                                <label class="form-check-label" for="categoryIsActive">Aktif</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                            <button type="submit" class="btn btn-primary">Kaydet</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -974,6 +1015,15 @@
                         </div>
                     </div>
 
+                    <!-- Duyurular -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div id="teacherAnnouncementsSection" class="d-none">
+                                <div id="teacherAnnouncements"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="card">
@@ -1037,7 +1087,9 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">Kategori</label>
-                                            <input type="text" class="form-control" id="courseCategory" required>
+                                            <select class="form-control" id="courseCategory" required>
+                                                <option value="">Kategori Seçin...</option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
@@ -1064,8 +1116,19 @@
                                     </div>
                                     <div class="col-md-4">
                                         <div class="mb-3">
+                                            <label class="form-label">Fiyatlandırma</label>
+                                            <select class="form-control" id="coursePriceType" onchange="togglePriceInput()" required>
+                                                <option value="free">Ücretsiz</option>
+                                                <option value="paid">Ücretli</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 offset-md-8" id="priceInputContainer" style="display: none;">
+                                        <div class="mb-3">
                                             <label class="form-label">Fiyat (TL)</label>
-                                            <input type="number" class="form-control" id="coursePrice" min="0" required>
+                                            <input type="number" class="form-control" id="coursePrice" min="1" placeholder="Fiyat girin...">
                                         </div>
                                     </div>
                                 </div>
@@ -1282,6 +1345,13 @@
                     </div>
 
                     <div class="row">
+                        <!-- Duyurular -->
+                        <div class="col-12 mb-4">
+                            <div id="studentAnnouncementsSection" class="d-none">
+                                <div id="studentAnnouncements"></div>
+                            </div>
+                        </div>
+                        
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
@@ -1399,16 +1469,35 @@
         </div>
     </div>
 
-    <!-- Course Approval Modal -->
+    <!-- Course Preview Modal (Sadece İnceleme) -->
+    <div class="modal fade" id="coursePreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-eye me-2"></i>Kurs Detayları</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="coursePreviewDetails"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Approval Modal (Değerlendirme) -->
     <div class="modal fade" id="courseApprovalModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Kurs İnceleme</h5>
+                    <h5 class="modal-title">Kurs Değerlendirme</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div id="courseDetails"></div>
+                    <hr>
                     <form id="courseApprovalForm">
                         <input type="hidden" id="approvalCourseId">
                         <div class="mb-3">

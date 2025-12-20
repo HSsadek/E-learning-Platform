@@ -1,24 +1,41 @@
 // Öğrenci Dashboard yükleme
 async function loadStudentDashboard() {
-    if (!authToken || (currentUser.role !== 'student' && currentUser.role !== 'admin')) {
-        showAlert('Öğrenci yetkisi gereklidir!', 'danger');
+    console.log('loadStudentDashboard çağrıldı, currentUser:', currentUser);
+    console.log('authToken:', authToken ? 'var' : 'yok');
+    
+    if (!authToken) {
+        showAlert('Lütfen giriş yapın!', 'danger');
+        return;
+    }
+    
+    if (!currentUser) {
+        showAlert('Kullanıcı bilgisi bulunamadı!', 'danger');
         return;
     }
 
     try {
+        console.log('Dashboard API çağrısı yapılıyor...');
         const response = await fetch(`${API_BASE_URL}/student/dashboard`, {
             headers: {
                 'Authorization': `Bearer ${authToken}`
             }
         });
 
+        console.log('Dashboard response status:', response.status);
+        
         if (response.ok) {
             const data = await response.json();
+            console.log('Dashboard verisi:', data);
             updateStudentDashboardStats(data.stats);
             updateStudentRecentActivities(data);
+        } else {
+            const errorData = await response.json();
+            console.error('Dashboard hatası:', errorData);
+            showAlert(errorData.message || 'Dashboard yüklenemedi', 'danger');
         }
     } catch (error) {
         console.error('Öğrenci dashboard yüklenirken hata:', error);
+        showAlert('Bağlantı hatası!', 'danger');
     }
 }
 
@@ -760,24 +777,31 @@ async function loadRecommendations() {
 
         if (response.ok) {
             const data = await response.json();
+            console.log('Öneriler verisi:', data); // Debug için
             displayRecommendations(data);
+        } else {
+            console.error('Öneriler yüklenemedi, status:', response.status);
+            displayRecommendations([]); // Boş dizi gönder
         }
     } catch (error) {
         console.error('Öneriler yüklenirken hata:', error);
+        displayRecommendations([]); // Hata durumunda boş dizi gönder
     }
 }
 
 // Önerileri göster
-function displayRecommendations(data) {
+function displayRecommendations(recommendations) {
     const content = document.getElementById('recommendationsContent');
     
+    // recommendations parametresinin undefined veya null olma durumunu kontrol et
+    if (!recommendations || !Array.isArray(recommendations) || recommendations.length === 0) {
+        content.innerHTML = '<div class="alert alert-info">Şu anda öneri bulunmuyor.</div>';
+        return;
+    }
+    
     content.innerHTML = `
-        <div class="alert alert-info">
-            <i class="fas fa-lightbulb"></i> ${data.reason}
-        </div>
-        
         <div class="row">
-            ${data.recommendations.map(course => `
+            ${recommendations.map(course => `
                 <div class="col-md-6 mb-3">
                     <div class="card h-100">
                         <div class="card-body">
@@ -790,7 +814,7 @@ function displayRecommendations(data) {
                             <div class="d-flex justify-content-between align-items-center">
                                 <small class="text-muted">
                                     <i class="fas fa-user"></i> ${course.instructor.name}<br>
-                                    <i class="fas fa-users"></i> ${course.students.length} öğrenci
+                                    <i class="fas fa-users"></i> ${course.students ? course.students.length : 0} öğrenci
                                 </small>
                                 <div>
                                     <button class="btn btn-outline-info btn-sm" onclick="showCourseDetail('${course._id}')">
@@ -816,7 +840,9 @@ document.addEventListener('DOMContentLoaded', function() {
         tab.addEventListener('shown.bs.tab', function(event) {
             const target = event.target.getAttribute('data-bs-target');
             
-            if (target === '#my-courses-student') {
+            if (target === '#student-dashboard') {
+                loadStudentDashboard();
+            } else if (target === '#my-courses-student') {
                 loadStudentCourses();
             } else if (target === '#my-questions') {
                 loadStudentQuestions();

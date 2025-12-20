@@ -103,8 +103,14 @@ function showPage(pageName) {
         loadAdminDashboard();
     } else if (pageName === 'teacher' && currentUser && currentUser.role === 'teacher' && currentUser.role !== 'pending_teacher') {
         loadTeacherDashboard();
-    } else if (pageName === 'student' && currentUser && (currentUser.role === 'student' || currentUser.role === 'pending_teacher')) {
-        loadStudentDashboard();
+    } else if (pageName === 'student' && currentUser) {
+        // student.js'deki fonksiyonu çağır
+        console.log('Student sayfası açılıyor, rol:', currentUser.role);
+        if (typeof loadStudentDashboard === 'function') {
+            loadStudentDashboard();
+        } else {
+            console.error('loadStudentDashboard fonksiyonu bulunamadı');
+        }
     } else if (pageName === 'courseDetail') {
         // Kurs detay sayfası için özel işlem yapılmayacak, dinamik yükleme
     } else if (pageName === 'lesson') {
@@ -386,7 +392,8 @@ async function loadCourses() {
         const data = await response.json();
         
         if (response.ok) {
-            displayCourses(data.courses);
+            // Backend doğrudan kurs dizisini döndürüyor, courses anahtarı yok
+            displayCourses(data);
         }
     } catch (error) {
         console.error('Kurslar yüklenirken hata:', error);
@@ -417,8 +424,10 @@ async function searchCourses(page = 1) {
         const data = await response.json();
         
         if (response.ok) {
-            displayCourses(data.courses);
-            displayPagination(data.currentPage, data.totalPages);
+            // Backend doğrudan kurs dizisini döndürüyor, courses anahtarı yok
+            displayCourses(data);
+            // Sayfalama bilgisi varsa kullan, yoksa varsayılan değerler
+            displayPagination(data.currentPage || 1, data.totalPages || 1);
         }
     } catch (error) {
         console.error('Kurs arama hatası:', error);
@@ -466,7 +475,8 @@ function displayCourses(courses) {
     console.log('displayCourses çağrıldı, currentUser:', currentUser); // Debug
     const coursesList = document.getElementById('coursesList');
     
-    if (courses.length === 0) {
+    // courses parametresinin undefined veya null olma durumunu kontrol et
+    if (!courses || !Array.isArray(courses) || courses.length === 0) {
         coursesList.innerHTML = '<div class="col-12"><p class="text-center">Kurs bulunamadı.</p></div>';
         return;
     }

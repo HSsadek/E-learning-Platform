@@ -8,10 +8,66 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+// Kurs arama ve filtreleme
+router.get('/search', async (req, res) => {
+    try {
+        const { query, category, level, instructor } = req.query;
+        
+        // Arama filtreleri oluştur
+        let searchFilter = {};
+        
+        if (query) {
+            searchFilter.$or = [
+                { title: { $regex: query, $options: 'i' } },
+                { description: { $regex: query, $options: 'i' } }
+            ];
+        }
+        
+        if (category) {
+            searchFilter.category = category;
+        }
+        
+        if (level) {
+            searchFilter.level = level;
+        }
+        
+        if (instructor) {
+            searchFilter.instructor = instructor;
+        }
+
+        const courses = await Course.find(searchFilter)
+            .populate('instructor', 'name email')
+            .populate('students', 'name')
+            .sort({ createdAt: -1 });
+
+        // Her kurs için ortalama puan hesapla
+        const coursesWithRating = await Promise.all(
+            courses.map(async (course) => {
+                const reviews = await Review.find({ course: course._id });
+                const averageRating = reviews.length > 0 
+                    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
+                    : 0;
+
+                return {
+                    ...course.toObject(),
+                    averageRating: Math.round(averageRating * 10) / 10,
+                    reviewCount: reviews.length,
+                    studentCount: course.students.length
+                };
+            })
+        );
+
+        res.json(coursesWithRating);
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
 // Öğrenci dashboard'u
 router.get('/dashboard', auth, async (req, res) => {
     try {
         const studentId = req.user.userId;
+        console.log('Dashboard isteği - Öğrenci ID:', studentId);
         
         // Öğrencinin kayıtlı olduğu kurslar
         const student = await User.findById(studentId)
@@ -26,6 +82,12 @@ router.get('/dashboard', auth, async (req, res) => {
         if (!student) {
             return res.status(404).json({ message: 'Öğrenci bulunamadı' });
         }
+
+        console.log('Öğrenci bulundu:', {
+            name: student.name,
+            enrolledCoursesCount: student.enrolledCourses.length,
+            enrolledCourses: student.enrolledCourses.map(c => ({ id: c._id, title: c.title }))
+        });
 
         // Her kurs için ilerleme bilgisini al
         const coursesWithProgress = await Promise.all(
@@ -138,7 +200,7 @@ router.get('/courses/:id', auth, async (req, res) => {
     }
 });
 
-module.exports = router;//ers içeriğini getir (sadece kayıtlı öğrenciler)
+// Ders içeriğini getir (sadece kayıtlı öğrenciler)
 router.get('/courses/:id/lesson/:lessonIndex', auth, async (req, res) => {
     try {
         const studentId = req.user.userId;
@@ -261,3 +323,59 @@ router.post('/courses/:id/review', auth, async (req, res) => {
         res.status(500).json({ message: 'Sunucu hatası', error: error.message });
     }
 });
+
+// Öğrenci sorularını getir
+router.get('/my-questions', auth, async (req, res) => {
+    try {
+        const studentId = req.user.userId;
+        
+        const questions = await Question.find({ student: studentId })
+            .populate('course', 'title')
+            .populate('answer.answeredBy', 'name')
+            .sort({ createdAt: -1 });
+
+        res.json(questions);
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
+// Öğrenci değerlendirmelerini getir
+router.get('/my-reviews', auth, async (req, res) => {
+    try {
+        const studentId = req.user.userId;
+        
+        const reviews = await Review.find({ student: studentId })
+            .populate('course', 'title')
+            .sort({ createdAt: -1 });
+
+        res.json(reviews);
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
+// Öğrenci için kurs önerileri
+router.get('/recommendations', auth, async (req, res) => {
+    try {
+        const studentId = req.user.userId;
+        
+        // Basit öneri sistemi - öğrencinin kayıtlı olmadığı popüler kurslar
+        const student = await User.findById(studentId);
+        const enrolledCourseIds = student.enrolledCourses;
+        
+        const recommendations = await Course.find({
+            _id: { $nin: enrolledCourseIds },
+            status: 'approved'
+        })
+        .populate('instructor', 'name')
+        .sort({ 'students.length': -1 }) // En çok öğrencisi olan kurslar
+        .limit(6);
+
+        res.json(recommendations);
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
+module.exports = router;

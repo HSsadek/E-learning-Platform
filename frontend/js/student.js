@@ -388,6 +388,9 @@ async function startLesson(courseId, lessonIndex) {
 
 // Ders gösterimi
 function displayLesson(data) {
+    console.log('displayLesson çağrıldı, data:', data);
+    console.log('Lesson videoUrl:', data.lesson.videoUrl);
+    
     const content = document.getElementById('lessonContent');
     const course = data.course;
     const lesson = data.lesson;
@@ -424,8 +427,8 @@ function displayLesson(data) {
                         </div>
                     </div>
                     <div class="card-body">
-                        ${lesson.videoUrl ? `
-                            <div class="ratio ratio-16x9 mb-3">
+                        ${lesson.videoUrl && lesson.videoUrl.trim() !== '' ? `
+                            <div class="ratio ratio-16x9 mb-3" style="background: #000; min-height: 400px;">
                                 <iframe src="${convertToEmbedUrl(lesson.videoUrl)}" allowfullscreen frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
                             </div>
                         ` : `
@@ -515,6 +518,17 @@ function displayLesson(data) {
                         <p class="text-muted">${course.instructor.email}</p>
                     </div>
                 </div>
+                
+                ${data.progress.progressPercentage > 0 ? `
+                <div class="card mt-3">
+                    <div class="card-body text-center">
+                        <p class="mb-2">Bu kursu beğendiniz mi?</p>
+                        <button class="btn btn-warning w-100" onclick="reviewCourse('${course._id}')">
+                            <i class="fas fa-star"></i> Kursu Değerlendir
+                        </button>
+                    </div>
+                </div>
+                ` : ''}
             </div>
         </div>
     `;

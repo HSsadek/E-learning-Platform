@@ -10,3 +10,9 @@ npm-debug.log*
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Uploaded files (videos, large files)
+backend/uploads/videos/
+backend/uploads/*.mp4
+backend/uploads/*.webm
+backend/uploads/*.ogg

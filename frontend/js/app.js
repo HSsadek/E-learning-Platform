@@ -82,6 +82,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 // Sayfa gösterme fonksiyonu
 function showPage(pageName) {
+    console.log('showPage çağrıldı, pageName:', pageName, 'currentUser:', currentUser);
+    
     // Tüm sayfaları gizle
     document.querySelectorAll('.page').forEach(page => {
         page.classList.add('d-none');
@@ -101,8 +103,18 @@ function showPage(pageName) {
         }, 100);
     } else if (pageName === 'admin' && currentUser && currentUser.role === 'admin') {
         loadAdminDashboard();
-    } else if (pageName === 'teacher' && currentUser && currentUser.role === 'teacher' && currentUser.role !== 'pending_teacher') {
-        loadTeacherDashboard();
+    } else if (pageName === 'teacher' && currentUser) {
+        // Öğretmen veya admin olabilir
+        console.log('Teacher sayfası açılıyor, rol:', currentUser.role);
+        console.log('loadTeacherDashboard fonksiyonu var mı:', typeof loadTeacherDashboard);
+        if (typeof loadTeacherDashboard === 'function') {
+            console.log('loadTeacherDashboard çağrılıyor...');
+            loadTeacherDashboard();
+        } else {
+            console.error('loadTeacherDashboard fonksiyonu bulunamadı');
+        }
+    } else if (pageName === 'teacher') {
+        console.log('Teacher sayfası açılamadı - currentUser:', currentUser);
     } else if (pageName === 'student' && currentUser) {
         // student.js'deki fonksiyonu çağır
         console.log('Student sayfası açılıyor, rol:', currentUser.role);

@@ -29,10 +29,16 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+// Videos klasörünü oluştur
+const videosDir = path.join(__dirname, 'uploads/videos');
+if (!fs.existsSync(videosDir)) {
+    fs.mkdirSync(videosDir, { recursive: true });
+}
+
 // Static dosyalar için uploads klasörünü serve et
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Multer konfigürasyonu
+// Multer konfigürasyonu - Profil resimleri için
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads/');
@@ -60,6 +66,35 @@ const upload = multer({
     }
 });
 
+// Multer konfigürasyonu - Videolar için
+const videoStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/videos/');
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'video-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const videoFileFilter = (req, file, cb) => {
+    // Video dosyalarına izin ver
+    const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Sadece video dosyaları yüklenebilir! (mp4, webm, ogg)'), false);
+    }
+};
+
+const videoUpload = multer({ 
+    storage: videoStorage,
+    fileFilter: videoFileFilter,
+    limits: {
+        fileSize: 500 * 1024 * 1024 // 500MB limit
+    }
+});
+
 // MongoDB bağlantısı
 mongoose.connect(process.env.MONGODB_URL)
     .then(() => console.log('MongoDB bağlantısı başarılı'))
@@ -82,6 +117,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/courses', require('./routes/courses'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/student', require('./routes/student'));
+app.use('/api/teacher', require('./routes/teacher'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Sunucu başlat 
 app.listen(PORT, () => {

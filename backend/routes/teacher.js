@@ -1,11 +1,113 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const Course = require('../models/Course');
 const User = require('../models/User');
 const Progress = require('../models/Progress');
 const Question = require('../models/Question');
+const Video = require('../models/Video');
 const teacherAuth = require('../middleware/teacherAuth');
 
 const router = express.Router();
+
+// Video upload için multer konfigürasyonu
+const videoStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const videosDir = path.join(__dirname, '../uploads/videos');
+        if (!fs.existsSync(videosDir)) {
+            fs.mkdirSync(videosDir, { recursive: true });
+        }
+        cb(null, videosDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'video-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const videoFileFilter = (req, file, cb) => {
+    const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Sadece video dosyaları yüklenebilir! (mp4, webm, ogg)'), false);
+    }
+};
+
+const videoUpload = multer({ 
+    storage: videoStorage,
+    fileFilter: videoFileFilter,
+    limits: {
+        fileSize: 500 * 1024 * 1024 // 500MB limit
+    }
+});
+
+// Video yükle
+router.post('/videos/upload', teacherAuth, videoUpload.single('video'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'Video dosyası gerekli' });
+        }
+
+        const video = new Video({
+            title: req.body.title || req.file.originalname,
+            filename: req.file.filename,
+            originalName: req.file.originalname,
+            path: '/uploads/videos/' + req.file.filename,
+            size: req.file.size,
+            mimetype: req.file.mimetype,
+            uploadedBy: req.user.userId
+        });
+
+        await video.save();
+
+        res.status(201).json({
+            message: 'Video başarıyla yüklendi',
+            video: video
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
+// Öğretmenin videolarını listele
+router.get('/videos', teacherAuth, async (req, res) => {
+    try {
+        const videos = await Video.find({ uploadedBy: req.user.userId })
+            .sort({ createdAt: -1 });
+
+        res.json(videos);
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
+// Video sil
+router.delete('/videos/:id', teacherAuth, async (req, res) => {
+    try {
+        const video = await Video.findOne({
+            _id: req.params.id,
+            uploadedBy: req.user.userId
+        });
+
+        if (!video) {
+            return res.status(404).json({ message: 'Video bulunamadı' });
+        }
+
+        // Dosyayı sil
+        const filePath = path.join(__dirname, '..', video.path);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+
+        await Video.findByIdAndDelete(req.params.id);
+
+        res.json({ message: 'Video başarıyla silindi' });
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
 
 // Öğretmen dashboard'u
 router.get('/dashboard', teacherAuth, async (req, res) => {
@@ -136,6 +238,39 @@ router.put('/courses/:id', teacherAuth, async (req, res) => {
         await course.populate('instructor', 'name email');
         
         res.json(course);
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
+// Kursu sil
+router.delete('/courses/:id', teacherAuth, async (req, res) => {
+    try {
+        const course = await Course.findOne({ 
+            _id: req.params.id, 
+            instructor: req.user.userId 
+        });
+
+        if (!course) {
+            return res.status(404).json({ message: 'Kurs bulunamadı veya yetkiniz yok' });
+        }
+
+        // Kursa kayıtlı öğrencilerin enrolledCourses listesinden kursu kaldır
+        await User.updateMany(
+            { enrolledCourses: course._id },
+            { $pull: { enrolledCourses: course._id } }
+        );
+
+        // İlerleme kayıtlarını sil
+        await Progress.deleteMany({ course: course._id });
+
+        // Soruları sil
+        await Question.deleteMany({ course: course._id });
+
+        // Kursu sil
+        await Course.findByIdAndDelete(req.params.id);
+
+        res.json({ message: 'Kurs başarıyla silindi' });
     } catch (error) {
         res.status(500).json({ message: 'Sunucu hatası', error: error.message });
     }

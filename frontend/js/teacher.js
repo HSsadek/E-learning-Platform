@@ -1,21 +1,36 @@
 // Öğretmen Dashboard yükleme
 async function loadTeacherDashboard() {
-    if (!authToken || (currentUser.role !== 'teacher' && currentUser.role !== 'admin')) {
-        showAlert('Öğretmen yetkisi gereklidir!', 'danger');
+    console.log('loadTeacherDashboard çağrıldı, currentUser:', currentUser);
+    console.log('authToken:', authToken ? 'var' : 'yok');
+    
+    if (!authToken) {
+        showAlert('Lütfen giriş yapın!', 'danger');
+        return;
+    }
+    
+    if (!currentUser) {
+        showAlert('Kullanıcı bilgisi bulunamadı!', 'danger');
         return;
     }
 
     try {
+        console.log('Teacher Dashboard API çağrısı yapılıyor...');
         const response = await fetch(`${API_BASE_URL}/teacher/dashboard`, {
             headers: {
                 'Authorization': `Bearer ${authToken}`
             }
         });
 
+        console.log('Teacher Dashboard response status:', response.status);
+        
         if (response.ok) {
             const data = await response.json();
+            console.log('Teacher Dashboard verisi:', data);
             updateTeacherDashboardStats(data.stats);
             updateTeacherRecentActivities(data);
+        } else {
+            const errorData = await response.json();
+            console.error('Teacher Dashboard hatası:', errorData);
         }
     } catch (error) {
         console.error('Öğretmen dashboard yüklenirken hata:', error);
@@ -113,25 +128,48 @@ function displayTeacherCourses(courses) {
                         ${course.rejectionReason ? `<div class="alert alert-danger"><strong>Red Sebebi:</strong> ${course.rejectionReason}</div>` : ''}
                     </div>
                     <div class="col-md-4 text-end">
-                        <button class="btn btn-primary btn-sm mb-2" onclick="editCourse('${course._id}')">
-                            Düzenle
-                        </button><br>
-                        ${course.status === 'draft' ? `
-                            <button class="btn btn-success btn-sm mb-2" onclick="submitCourseForApproval('${course._id}')">
-                                Onaya Gönder
-                            </button><br>
-                        ` : ''}
-                        ${course.status === 'approved' ? `
-                            <button class="btn btn-info btn-sm mb-2" onclick="viewCourseStudents('${course._id}')">
-                                Öğrenciler
-                            </button><br>
-                            <button class="btn btn-warning btn-sm mb-2" onclick="sendCourseAnnouncement('${course._id}')">
-                                Duyuru Gönder
-                            </button><br>
-                        ` : ''}
-                        <button class="btn btn-outline-primary btn-sm" onclick="viewCourseQuestions('${course._id}')">
-                            Sorular
-                        </button>
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-cog me-1"></i> İşlemler
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="javascript:void(0)" onclick="editCourse('${course._id}')">
+                                        <i class="fas fa-edit me-2"></i>Düzenle
+                                    </a>
+                                </li>
+                                ${course.status === 'draft' ? `
+                                <li>
+                                    <a class="dropdown-item text-success" href="javascript:void(0)" onclick="submitCourseForApproval('${course._id}')">
+                                        <i class="fas fa-paper-plane me-2"></i>Onaya Gönder
+                                    </a>
+                                </li>
+                                ` : ''}
+                                ${course.status === 'approved' ? `
+                                <li>
+                                    <a class="dropdown-item" href="javascript:void(0)" onclick="viewCourseStudents('${course._id}')">
+                                        <i class="fas fa-users me-2"></i>Öğrenciler
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-warning" href="javascript:void(0)" onclick="sendCourseAnnouncement('${course._id}')">
+                                        <i class="fas fa-bullhorn me-2"></i>Duyuru Gönder
+                                    </a>
+                                </li>
+                                ` : ''}
+                                <li>
+                                    <a class="dropdown-item" href="javascript:void(0)" onclick="viewCourseQuestions('${course._id}')">
+                                        <i class="fas fa-question-circle me-2"></i>Sorular
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteCourse('${course._id}', '${course.title.replace(/'/g, "\\'")}')">
+                                        <i class="fas fa-trash me-2"></i>Kursu Sil
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -145,6 +183,7 @@ document.getElementById('createCourseForm').addEventListener('submit', async (e)
     
     const form = e.target;
     const editId = form.getAttribute('data-edit-id');
+    const editStatus = form.getAttribute('data-edit-status');
     const isEditing = !!editId;
     
     const courseData = {
@@ -176,18 +215,32 @@ document.getElementById('createCourseForm').addEventListener('submit', async (e)
         const data = await response.json();
 
         if (response.ok) {
-            const message = isEditing ? 'Kurs başarıyla güncellendi!' : 'Kurs başarıyla oluşturuldu!';
+            let message;
+            if (isEditing && editStatus === 'approved') {
+                message = 'Kurs başarıyla güncellendi! Değişiklikler kaydedildi.';
+            } else if (isEditing) {
+                message = 'Kurs başarıyla güncellendi!';
+            } else {
+                message = 'Kurs başarıyla oluşturuldu!';
+            }
             showAlert(message, 'success');
             
             // Formu sıfırla
             document.getElementById('createCourseForm').reset();
             form.removeAttribute('data-edit-id');
+            form.removeAttribute('data-edit-status');
             resetLessons();
             
             // Başlığı sıfırla
             const titleElement = document.querySelector('#create-course .card-header h5');
             if (titleElement) {
                 titleElement.textContent = 'Yeni Kurs Oluştur';
+            }
+            
+            // Submit butonunu sıfırla
+            const submitBtn = document.getElementById('courseSubmitBtn');
+            if (submitBtn) {
+                submitBtn.textContent = 'Taslak Olarak Kaydet';
             }
             
             loadTeacherCourses();
@@ -242,8 +295,13 @@ function addLesson() {
                 <textarea class="form-control lesson-content" rows="2"></textarea>
             </div>
             <div class="mt-2">
-                <label class="form-label">Video URL (opsiyonel)</label>
-                <input type="url" class="form-control lesson-video">
+                <label class="form-label">Video</label>
+                <div class="input-group">
+                    <input type="text" class="form-control lesson-video" placeholder="Video URL veya galeriden seçin">
+                    <button type="button" class="btn btn-outline-secondary" onclick="openVideoSelector(this)">
+                        <i class="fas fa-photo-video"></i> Galeriden Seç
+                    </button>
+                </div>
             </div>
         </div>
     `;
@@ -280,8 +338,13 @@ function resetLessons() {
                 <textarea class="form-control lesson-content" rows="2"></textarea>
             </div>
             <div class="mt-2">
-                <label class="form-label">Video URL (opsiyonel)</label>
-                <input type="url" class="form-control lesson-video">
+                <label class="form-label">Video</label>
+                <div class="input-group">
+                    <input type="text" class="form-control lesson-video" placeholder="Video URL veya galeriden seçin">
+                    <button type="button" class="btn btn-outline-secondary" onclick="openVideoSelector(this)">
+                        <i class="fas fa-photo-video"></i> Galeriden Seç
+                    </button>
+                </div>
             </div>
         </div>
     `;
@@ -356,6 +419,32 @@ async function submitCourseForApproval(courseId) {
                 loadTeacherDashboard();
             } else {
                 showAlert(data.message, 'danger');
+            }
+        } catch (error) {
+            showAlert('Bağlantı hatası!', 'danger');
+        }
+    }
+}
+
+// Kursu sil
+async function deleteCourse(courseId, courseTitle) {
+    if (confirm(`"${courseTitle}" kursunu silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz ve kursa kayıtlı tüm öğrenciler kaydını kaybedecek!`)) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/teacher/courses/${courseId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showAlert('Kurs başarıyla silindi!', 'success');
+                loadTeacherCourses();
+                loadTeacherDashboard();
+            } else {
+                showAlert(data.message || 'Kurs silinirken hata oluştu!', 'danger');
             }
         } catch (error) {
             showAlert('Bağlantı hatası!', 'danger');
@@ -711,7 +800,9 @@ document.addEventListener('DOMContentLoaded', function() {
         tab.addEventListener('shown.bs.tab', function(event) {
             const target = event.target.getAttribute('data-bs-target');
             
-            if (target === '#my-courses') {
+            if (target === '#teacher-dashboard') {
+                loadTeacherDashboard();
+            } else if (target === '#my-courses') {
                 loadTeacherCourses();
             } else if (target === '#questions') {
                 loadTeacherQuestions();
@@ -792,6 +883,7 @@ async function editCourse(courseId) {
             // Form'u düzenleme moduna al
             const form = document.getElementById('createCourseForm');
             form.setAttribute('data-edit-id', courseId);
+            form.setAttribute('data-edit-status', course.status);
             
             // Sayfa başlığını değiştir
             const titleElement = document.querySelector('#create-course .card-header h5');
@@ -799,14 +891,301 @@ async function editCourse(courseId) {
                 titleElement.textContent = 'Kurs Düzenle';
             }
             
+            // Submit butonunun metnini değiştir
+            const submitBtn = document.getElementById('courseSubmitBtn');
+            if (submitBtn) {
+                if (course.status === 'approved') {
+                    submitBtn.textContent = 'Değişiklikleri Kaydet';
+                } else {
+                    submitBtn.textContent = 'Güncelle';
+                }
+            }
+            
             // Create course sekmesine geç
             const createTab = document.querySelector('button[data-bs-target="#create-course"]');
             createTab.click();
             
-            showAlert('Kurs düzenleme için yüklendi', 'info');
+            if (course.status === 'approved') {
+                showAlert('Onaylanmış kurs düzenleniyor. Değişiklikler direkt kaydedilecek.', 'info');
+            } else {
+                showAlert('Kurs düzenleme için yüklendi', 'info');
+            }
         }
     } catch (error) {
         console.error('Kurs düzenleme hatası:', error);
         showAlert('Kurs yüklenirken hata oluştu!', 'danger');
     }
+}
+
+// Video Galerisi Fonksiyonları
+
+// Video yükleme formu
+document.getElementById('videoUploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const title = document.getElementById('videoTitle').value;
+    const fileInput = document.getElementById('videoFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showAlert('Lütfen bir video dosyası seçin!', 'warning');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('video', file);
+    
+    const progressDiv = document.getElementById('uploadProgress');
+    const progressBar = progressDiv.querySelector('.progress-bar');
+    const percentText = document.getElementById('uploadPercent');
+    
+    progressDiv.classList.remove('d-none');
+    
+    try {
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = percent + '%';
+                percentText.textContent = percent;
+            }
+        });
+        
+        xhr.addEventListener('load', () => {
+            if (xhr.status === 201) {
+                const response = JSON.parse(xhr.responseText);
+                showAlert(response.message, 'success');
+                document.getElementById('videoUploadForm').reset();
+                loadVideoGallery();
+            } else {
+                const error = JSON.parse(xhr.responseText);
+                showAlert(error.message || 'Video yüklenirken hata oluştu!', 'danger');
+            }
+            progressDiv.classList.add('d-none');
+            progressBar.style.width = '0%';
+        });
+        
+        xhr.addEventListener('error', () => {
+            showAlert('Bağlantı hatası!', 'danger');
+            progressDiv.classList.add('d-none');
+            progressBar.style.width = '0%';
+        });
+        
+        xhr.open('POST', `${API_BASE_URL}/teacher/videos/upload`);
+        xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
+        xhr.send(formData);
+        
+    } catch (error) {
+        showAlert('Bağlantı hatası!', 'danger');
+        progressDiv.classList.add('d-none');
+    }
+});
+
+// Video galerisini yükle
+async function loadVideoGallery() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/teacher/videos`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        if (response.ok) {
+            const videos = await response.json();
+            displayVideoGallery(videos);
+        }
+    } catch (error) {
+        console.error('Video galerisi yüklenirken hata:', error);
+    }
+}
+
+// Video galerisini göster
+function displayVideoGallery(videos) {
+    const content = document.getElementById('videoGalleryContent');
+    
+    if (videos.length === 0) {
+        content.innerHTML = '<div class="alert alert-info">Henüz video yüklemediniz.</div>';
+        return;
+    }
+    
+    content.innerHTML = `
+        <div class="row">
+            ${videos.map(video => `
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <video class="w-100 mb-2" style="max-height: 200px; background: #000;" controls>
+                                <source src="${API_BASE_URL.replace('/api', '')}${video.path}" type="${video.mimetype}">
+                                Tarayıcınız video oynatmayı desteklemiyor.
+                            </video>
+                            <h6 class="card-title">${video.title}</h6>
+                            <small class="text-muted d-block mb-2">
+                                ${formatFileSize(video.size)} | ${new Date(video.createdAt).toLocaleDateString('tr-TR')}
+                            </small>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="copyVideoUrl('${API_BASE_URL.replace('/api', '')}${video.path}')">
+                                    <i class="fas fa-copy"></i> URL Kopyala
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteVideo('${video._id}')">
+                                    <i class="fas fa-trash"></i> Sil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// Dosya boyutunu formatla
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Video URL'sini kopyala
+function copyVideoUrl(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        showAlert('Video URL\'si panoya kopyalandı!', 'success');
+    }).catch(() => {
+        showAlert('URL kopyalanamadı!', 'danger');
+    });
+}
+
+// Video sil
+async function deleteVideo(videoId) {
+    if (confirm('Bu videoyu silmek istediğinizden emin misiniz?')) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/teacher/videos/${videoId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showAlert(data.message, 'success');
+                loadVideoGallery();
+            } else {
+                showAlert(data.message || 'Video silinirken hata oluştu!', 'danger');
+            }
+        } catch (error) {
+            showAlert('Bağlantı hatası!', 'danger');
+        }
+    }
+}
+
+// Tab değişikliklerini güncelle - video galerisi için
+const videoGalleryTab = document.querySelector('button[data-bs-target="#video-gallery"]');
+if (videoGalleryTab) {
+    videoGalleryTab.addEventListener('shown.bs.tab', function() {
+        loadVideoGallery();
+    });
+}
+
+
+// Video seçici için geçici değişken
+let currentVideoInput = null;
+
+// Video seçici modalını aç
+async function openVideoSelector(button) {
+    currentVideoInput = button.closest('.input-group').querySelector('.lesson-video');
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/teacher/videos`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        if (response.ok) {
+            const videos = await response.json();
+            displayVideoSelector(videos);
+            new bootstrap.Modal(document.getElementById('videoSelectorModal')).show();
+        }
+    } catch (error) {
+        showAlert('Videolar yüklenirken hata oluştu!', 'danger');
+    }
+}
+
+// Video seçici içeriğini göster
+function displayVideoSelector(videos) {
+    const content = document.getElementById('videoSelectorContent');
+    
+    if (videos.length === 0) {
+        content.innerHTML = `
+            <div class="alert alert-info">
+                <p>Henüz video yüklemediniz.</p>
+                <button class="btn btn-primary" onclick="goToVideoGallery()">
+                    <i class="fas fa-upload"></i> Video Yükle
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    content.innerHTML = `
+        <div class="row">
+            ${videos.map(video => `
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 video-select-card" style="cursor: pointer;" onclick="selectVideo('${API_BASE_URL.replace('/api', '')}${video.path}')">
+                        <div class="card-body text-center">
+                            <video class="w-100 mb-2" style="max-height: 120px; background: #000;">
+                                <source src="${API_BASE_URL.replace('/api', '')}${video.path}" type="${video.mimetype}">
+                            </video>
+                            <h6 class="card-title small">${video.title}</h6>
+                            <small class="text-muted">${formatFileSize(video.size)}</small>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        <hr>
+        <div class="text-center">
+            <p class="text-muted">veya YouTube URL'si girin</p>
+            <div class="input-group">
+                <input type="url" class="form-control" id="youtubeUrlInput" placeholder="https://www.youtube.com/watch?v=...">
+                <button class="btn btn-danger" onclick="selectYoutubeUrl()">
+                    <i class="fab fa-youtube"></i> YouTube Ekle
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Video seç
+function selectVideo(videoUrl) {
+    if (currentVideoInput) {
+        currentVideoInput.value = videoUrl;
+    }
+    bootstrap.Modal.getInstance(document.getElementById('videoSelectorModal')).hide();
+    showAlert('Video seçildi!', 'success');
+}
+
+// YouTube URL'si seç
+function selectYoutubeUrl() {
+    const url = document.getElementById('youtubeUrlInput').value;
+    if (!url) {
+        showAlert('Lütfen bir YouTube URL\'si girin!', 'warning');
+        return;
+    }
+    if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+        showAlert('Geçerli bir YouTube URL\'si girin!', 'warning');
+        return;
+    }
+    selectVideo(url);
+}
+
+// Video galerisi sekmesine git
+function goToVideoGallery() {
+    bootstrap.Modal.getInstance(document.getElementById('videoSelectorModal')).hide();
+    document.querySelector('button[data-bs-target="#video-gallery"]').click();
 }

@@ -1437,3 +1437,90 @@ textarea[readonly]:focus {
 .custom-alert .btn-close {
     padding: 0.5rem;
 }
+
+/* 
+Dropdown menüsünün kart dışına taşmasını sağla */
+.card {
+    overflow: visible !important;
+}
+
+.card-body {
+    overflow: visible !important;
+}
+
+/* Dropdown menüsünün üstte görünmesini sağla */
+.dropdown-menu {
+    z-index: 1050 !important;
+}
+
+/* Öğretmen kursları dropdown için özel stil */
+#teacherCoursesContent .dropdown {
+    position: relative;
+}
+
+#teacherCoursesContent .dropdown-menu {
+    position: absolute !important;
+    min-width: 200px;
+}
+
+/* Tab content overflow düzeltmesi */
+.tab-content,
+.tab-pane,
+#my-courses,
+#teacherCoursesContent {
+    overflow: visible !important;
+}
+
+/* Tüm parent elementlerin overflow'unu düzelt */
+#teacherPage,
+#teacherPage .card,
+#teacherPage .card-body,
+#teacherPage .tab-content,
+#teacherPage .tab-pane {
+    overflow: visible !important;
+}
+
+/* Dropdown menüsünün aşağı doğru düzgün açılması için */
+#teacherCoursesContent .dropdown-menu {
+    position: absolute !important;
+    top: 100% !important;
+    bottom: auto !important;
+    margin-top: 5px;
+    z-index: 9999 !important;
+}
+
+/* Açık dropdown'un parent kartını öne çıkar */
+#teacherCoursesContent .card {
+    position: relative;
+}
+
+#teacherCoursesContent .card:has(.dropdown-menu.show) {
+    z-index: 1000 !important;
+}
+
+#teacherCoursesContent .dropdown.show {
+    z-index: 9999 !important;
+}
+
+
+/* Video iframe düzeltmesi */
+.ratio-16x9 {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+}
+
+.ratio-16x9 iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Ders sayfası video container */
+#lessonContent .ratio {
+    min-height: 300px;
+    background: #000;
+}

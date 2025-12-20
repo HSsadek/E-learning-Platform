@@ -297,7 +297,8 @@ router.get('/courses/:id/lesson/:lessonIndex', auth, async (req, res) => {
                 _id: course._id,
                 title: course.title,
                 instructor: course.instructor,
-                totalLessons: course.lessons.length
+                totalLessons: course.lessons.length,
+                announcements: course.announcements ? course.announcements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5) : []
             },
             lesson: {
                 ...lesson.toObject(),

@@ -105,6 +105,7 @@ router.post('/register', async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: userRole,
+                profileImage: user.profileImage,
                 teacherApplication: teacherApplication
             }
         });
@@ -158,6 +159,7 @@ router.post('/login', async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                profileImage: user.profileImage,
                 effectiveRole: tokenRole // Gerçek yetki seviyesi
             }
         });

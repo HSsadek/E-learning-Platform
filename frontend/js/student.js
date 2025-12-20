@@ -631,6 +631,23 @@ function displayLesson(data) {
                     </div>
                 </div>
                 
+                ${course.announcements && course.announcements.length > 0 ? `
+                <div class="card mt-3" style="border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                    <div class="card-header bg-transparent border-0 pt-3">
+                        <h6 class="mb-0"><i class="fas fa-bullhorn me-2 text-warning"></i>Kurs Duyuruları</h6>
+                    </div>
+                    <div class="card-body pt-0">
+                        ${course.announcements.map(ann => `
+                            <div class="border-start border-warning border-3 ps-3 mb-3">
+                                <strong class="d-block" style="font-size: 14px;">${ann.title}</strong>
+                                <p class="mb-1 small text-muted">${ann.content}</p>
+                                <small class="text-muted"><i class="fas fa-clock me-1"></i>${new Date(ann.createdAt).toLocaleDateString('tr-TR')}</small>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+                
                 ${data.progress.progressPercentage > 0 ? `
                 <div class="card mt-3" style="border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
                     <div class="card-body text-center p-4">

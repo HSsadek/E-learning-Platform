@@ -1639,7 +1639,7 @@
         </div>
     </div>
 
-    <!-- Course Announcement Modal -->
+    <!-- Course Announcement Modal (Yeni Duyuru) -->
     <div class="modal fade" id="courseAnnouncementModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -1660,6 +1660,46 @@
                         </div>
                         <button type="submit" class="btn btn-primary">Gönder</button>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Announcements List Modal (Duyuruları Görüntüle) -->
+    <div class="modal fade" id="courseAnnouncementsListModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title"><i class="fas fa-bullhorn me-2"></i>Kurs Duyuruları</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="courseAnnouncementsListContent">
+                        <!-- Duyurular buraya yüklenecek -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Questions List Modal (Soruları Görüntüle) -->
+    <div class="modal fade" id="courseQuestionsListModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="fas fa-question-circle me-2"></i>Kurs Soruları</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                    <div id="courseQuestionsListContent">
+                        <!-- Sorular buraya yüklenecek -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
                 </div>
             </div>
         </div>

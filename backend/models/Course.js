@@ -50,6 +50,14 @@ const courseSchema = new mongoose.Schema({
     rejectionReason: {
         type: String
     },
+    announcements: [{
+        title: String,
+        content: String,
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     approvedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'

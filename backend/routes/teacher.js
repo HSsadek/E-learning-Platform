@@ -443,13 +443,70 @@ router.post('/courses/:id/announcement', teacherAuth, async (req, res) => {
             return res.status(404).json({ message: 'Kurs bulunamadı veya yetkiniz yok' });
         }
 
-        // Burada gerçek bir uygulamada email/bildirim servisi kullanılır
-        // Şimdilik sadece başarı mesajı döndürüyoruz
+        // Duyuruyu kursa ekle
+        course.announcements.push({
+            title,
+            content,
+            createdAt: new Date()
+        });
+        await course.save();
         
         res.json({ 
             message: `"${title}" başlıklı duyuru ${course.students.length} öğrenciye gönderildi`,
             recipients: course.students.length
         });
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
+// Kurs duyurularını getir
+router.get('/courses/:id/announcements', teacherAuth, async (req, res) => {
+    try {
+        const course = await Course.findOne({ 
+            _id: req.params.id, 
+            instructor: req.user.userId 
+        });
+
+        if (!course) {
+            return res.status(404).json({ message: 'Kurs bulunamadı veya yetkiniz yok' });
+        }
+
+        const announcements = course.announcements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        res.json({
+            courseTitle: course.title,
+            announcements
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
+// Kurs duyurusunu sil
+router.delete('/courses/:id/announcement/:announcementId', teacherAuth, async (req, res) => {
+    try {
+        const course = await Course.findOne({ 
+            _id: req.params.id, 
+            instructor: req.user.userId 
+        });
+
+        if (!course) {
+            return res.status(404).json({ message: 'Kurs bulunamadı veya yetkiniz yok' });
+        }
+
+        const announcementIndex = course.announcements.findIndex(
+            a => a._id.toString() === req.params.announcementId
+        );
+
+        if (announcementIndex === -1) {
+            return res.status(404).json({ message: 'Duyuru bulunamadı' });
+        }
+
+        course.announcements.splice(announcementIndex, 1);
+        await course.save();
+        
+        res.json({ message: 'Duyuru silindi' });
     } catch (error) {
         res.status(500).json({ message: 'Sunucu hatası', error: error.message });
     }

@@ -292,6 +292,11 @@ function displayTeacherCourses(courses) {
                                         <i class="fas fa-bullhorn me-2"></i>Duyuru Gönder
                                     </a>
                                 </li>
+                                <li>
+                                    <a class="dropdown-item text-info" href="javascript:void(0)" onclick="viewCourseAnnouncements('${course._id}')">
+                                        <i class="fas fa-list me-2"></i>Duyuruları Gör
+                                    </a>
+                                </li>
                                 ` : ''}
                                 <li>
                                     <a class="dropdown-item" href="javascript:void(0)" onclick="viewCourseQuestions('${course._id}')">
@@ -674,6 +679,97 @@ function sendCourseAnnouncement(courseId) {
     new bootstrap.Modal(document.getElementById('courseAnnouncementModal')).show();
 }
 
+// Kurs duyurularını görüntüle
+async function viewCourseAnnouncements(courseId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/teacher/courses/${courseId}/announcements`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            displayCourseAnnouncementsList(courseId, data);
+        } else {
+            showAlert('Duyurular yüklenemedi!', 'danger');
+        }
+    } catch (error) {
+        console.error('Duyurular yüklenirken hata:', error);
+        showAlert('Bağlantı hatası!', 'danger');
+    }
+}
+
+// Kurs duyurularını listele
+function displayCourseAnnouncementsList(courseId, data) {
+    const content = document.getElementById('courseAnnouncementsListContent');
+    
+    if (!data.announcements || data.announcements.length === 0) {
+        content.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                <p class="text-muted">Bu kursta henüz duyuru yok.</p>
+                <button class="btn btn-warning" onclick="bootstrap.Modal.getInstance(document.getElementById('courseAnnouncementsListModal')).hide(); sendCourseAnnouncement('${courseId}');">
+                    <i class="fas fa-plus me-2"></i>İlk Duyuruyu Ekle
+                </button>
+            </div>
+        `;
+    } else {
+        content.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">${data.courseTitle}</h6>
+                <span class="badge bg-warning text-dark">${data.announcements.length} duyuru</span>
+            </div>
+            ${data.announcements.map(ann => `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">${ann.title}</h6>
+                                <p class="text-muted mb-2">${ann.content}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>${new Date(ann.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCourseAnnouncement('${courseId}', '${ann._id}', '${ann.title.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        `;
+    }
+    
+    new bootstrap.Modal(document.getElementById('courseAnnouncementsListModal')).show();
+}
+
+// Kurs duyurusunu sil
+async function deleteCourseAnnouncement(courseId, announcementId, title) {
+    if (!confirm(`"${title}" duyurusunu silmek istediğinizden emin misiniz?`)) return;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/teacher/courses/${courseId}/announcement/${announcementId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showAlert('Duyuru silindi!', 'success');
+            // Listeyi yenile
+            viewCourseAnnouncements(courseId);
+        } else {
+            showAlert(data.message || 'Duyuru silinemedi!', 'danger');
+        }
+    } catch (error) {
+        showAlert('Bağlantı hatası!', 'danger');
+    }
+}
+
 // Kurs duyurusu gönderme
 document.getElementById('courseAnnouncementForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -994,8 +1090,113 @@ function getStatusBadgeColor(status) {
 }
 
 // Kurs sorularını görüntüle
-function viewCourseQuestions(courseId) {
-    showAlert('Soru yönetimi özelliği yakında eklenecek!', 'info');
+async function viewCourseQuestions(courseId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/teacher/courses/${courseId}/questions`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        if (response.ok) {
+            const questions = await response.json();
+            displayCourseQuestions(courseId, questions);
+        } else {
+            showAlert('Sorular yüklenemedi!', 'danger');
+        }
+    } catch (error) {
+        console.error('Sorular yüklenirken hata:', error);
+        showAlert('Bağlantı hatası!', 'danger');
+    }
+}
+
+// Kurs sorularını göster
+function displayCourseQuestions(courseId, questions) {
+    const content = document.getElementById('courseQuestionsListContent');
+    
+    if (!questions || questions.length === 0) {
+        content.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                <p class="text-muted">Bu kursta henüz soru sorulmamış.</p>
+            </div>
+        `;
+    } else {
+        content.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="badge bg-primary">${questions.length} soru</span>
+                <span class="badge bg-warning">${questions.filter(q => !q.isAnswered).length} cevaplanmamış</span>
+            </div>
+            ${questions.map(q => `
+                <div class="card mb-3 ${!q.isAnswered ? 'border-warning' : ''}">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-2">
+                            ${q.student && q.student.profileImage ? 
+                                `<img src="${API_BASE_URL.replace('/api', '')}${q.student.profileImage}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">` :
+                                `<div class="rounded-circle me-2 bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-weight: bold;">${q.student ? q.student.name.charAt(0).toUpperCase() : '?'}</div>`
+                            }
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <strong>${q.student ? q.student.name : 'Anonim'}</strong>
+                                    <small class="text-muted">Ders ${q.lesson + 1} • ${new Date(q.createdAt).toLocaleDateString('tr-TR')}</small>
+                                </div>
+                                <p class="mb-2">${q.content}</p>
+                                ${!q.isAnswered ? `
+                                    <span class="badge bg-warning text-dark mb-2">Cevaplanmamış</span>
+                                    <div class="mt-2">
+                                        <textarea class="form-control mb-2" id="answer-${q._id}" rows="2" placeholder="Cevabınızı yazın..."></textarea>
+                                        <button class="btn btn-sm btn-success" onclick="answerQuestion('${q._id}', '${courseId}')">
+                                            <i class="fas fa-reply me-1"></i>Cevapla
+                                        </button>
+                                    </div>
+                                ` : `
+                                    <div class="mt-2 p-2 bg-light rounded">
+                                        <small class="text-success"><i class="fas fa-check-circle me-1"></i>Cevaplandı</small>
+                                        <p class="mb-0 mt-1">${q.answer.content}</p>
+                                        <small class="text-muted">${new Date(q.answer.answeredAt).toLocaleDateString('tr-TR')}</small>
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        `;
+    }
+    
+    new bootstrap.Modal(document.getElementById('courseQuestionsListModal')).show();
+}
+
+// Soruyu cevapla
+async function answerQuestion(questionId, courseId) {
+    const answerContent = document.getElementById(`answer-${questionId}`).value.trim();
+    
+    if (!answerContent) {
+        showAlert('Lütfen bir cevap yazın!', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/teacher/questions/${questionId}/answer`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ content: answerContent })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showAlert('Cevap gönderildi!', 'success');
+            viewCourseQuestions(courseId);
+        } else {
+            showAlert(data.message || 'Cevap gönderilemedi!', 'danger');
+        }
+    } catch (error) {
+        showAlert('Bağlantı hatası!', 'danger');
+    }
 }
 
 // Kurs düzenleme

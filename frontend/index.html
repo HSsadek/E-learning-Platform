@@ -326,7 +326,7 @@
                         <div class="card-body">
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle me-2"></i>
-                                Email adresinizi girin, size yeni şifre gönderelim.
+                                Email adresinizi girin, şifre sıfırlama linki gönderelim.
                             </div>
                             <form id="forgotPasswordForm">
                                 <div class="mb-3">
@@ -338,8 +338,8 @@
                                         <input type="email" class="form-control" id="forgotEmail" placeholder="Kayıtlı email adresiniz" required autocomplete="email">
                                     </div>
                                 </div>
-                                <button type="submit" class="btn btn-primary w-100 mb-3">
-                                    <i class="fas fa-paper-plane me-2"></i>Yeni Şifre Gönder
+                                <button type="submit" class="btn btn-primary w-100 mb-3" id="forgotPasswordBtn">
+                                    <i class="fas fa-paper-plane me-2"></i>Sıfırlama Linki Gönder
                                 </button>
                                 <div class="text-center">
                                     <a href="#" class="text-decoration-none" onclick="showPage('login')">
@@ -347,6 +347,53 @@
                                     </a>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reset Password Page -->
+        <div id="resetPasswordPage" class="page d-none">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h4><i class="fas fa-lock me-2"></i>Yeni Şifre Belirle</h4>
+                        </div>
+                        <div class="card-body">
+                            <div id="resetPasswordStatus"></div>
+                            <form id="resetPasswordForm" class="d-none">
+                                <div class="mb-3">
+                                    <label class="form-label">Yeni Şifre</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-lock"></i>
+                                        </span>
+                                        <input type="password" class="form-control" id="newPassword" placeholder="En az 6 karakter" required minlength="6">
+                                        <button class="btn btn-outline-secondary" type="button" id="toggleNewPassword">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Yeni Şifre (Tekrar)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-lock"></i>
+                                        </span>
+                                        <input type="password" class="form-control" id="confirmNewPassword" placeholder="Şifrenizi tekrar girin" required minlength="6">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 mb-3" id="resetPasswordBtn">
+                                    <i class="fas fa-check me-2"></i>Şifremi Güncelle
+                                </button>
+                            </form>
+                            <div class="text-center mt-3">
+                                <a href="#" class="text-decoration-none" onclick="showPage('login')">
+                                    <i class="fas fa-arrow-left me-1"></i>Giriş sayfasına dön
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

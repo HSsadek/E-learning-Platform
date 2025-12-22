@@ -45,6 +45,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('registerForm').addEventListener('submit', handleRegister);
     document.getElementById('forgotPasswordForm').addEventListener('submit', handleForgotPassword);
     
+    // Reset password form
+    const resetPasswordForm = document.getElementById('resetPasswordForm');
+    if (resetPasswordForm) {
+        resetPasswordForm.addEventListener('submit', handleResetPassword);
+    }
+    
     // Profil form event listener'ları
     const profileInfoForm = document.getElementById('profileInfoForm');
     if (profileInfoForm) {
@@ -64,9 +70,15 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Şifre görünürlük toggle'ları
     setupPasswordToggle('toggleLoginPassword', 'loginPassword');
     setupPasswordToggle('toggleRegisterPassword', 'registerPassword');
+    setupPasswordToggle('toggleNewPassword', 'newPassword');
     
-    // İlk sayfa olarak ana sayfayı göster
-    showPage('home');
+    // Reset token kontrolü (URL'de token varsa)
+    checkResetToken();
+    
+    // İlk sayfa olarak ana sayfayı göster (reset token yoksa)
+    if (!window.location.hash.includes('reset-password')) {
+        showPage('home');
+    }
     
     // Token varsa kullanıcı bilgilerini al (önce bu)
     if (authToken) {
@@ -861,7 +873,7 @@ async function handleForgotPassword(e) {
     e.preventDefault();
     
     const email = document.getElementById('forgotEmail').value;
-    const submitButton = e.target.querySelector('button[type="submit"]');
+    const submitButton = document.getElementById('forgotPasswordBtn');
     const originalText = submitButton.innerHTML;
     
     // Loading state
@@ -880,24 +892,141 @@ async function handleForgotPassword(e) {
         const data = await response.json();
         
         if (response.ok) {
-            // Demo için geçici şifreyi göster
-            if (data.temporaryPassword) {
-                showAlert(`Yeni şifreniz: <strong>${data.temporaryPassword}</strong><br><small>Demo amaçlı gösteriliyor. Gerçek uygulamada email ile gönderilir.</small>`, 'success');
-            } else {
-                showAlert('Yeni şifreniz email adresinize gönderildi!', 'success');
-            }
-            
+            showAlert(data.message, 'success');
             document.getElementById('forgotPasswordForm').reset();
-            setTimeout(() => {
-                showPage('login');
-            }, 5000);
         } else {
             showAlert(data.message, 'danger');
         }
     } catch (error) {
         showAlert('Bağlantı hatası!', 'danger');
     } finally {
-        // Reset button state
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
+    }
+}
+
+// URL'den reset token'ı kontrol et
+function checkResetToken() {
+    const hash = window.location.hash;
+    if (hash.includes('reset-password')) {
+        const urlParams = new URLSearchParams(hash.split('?')[1]);
+        const token = urlParams.get('token');
+        
+        if (token) {
+            showPage('resetPassword');
+            verifyResetToken(token);
+        }
+    }
+}
+
+// Reset token'ı doğrula
+async function verifyResetToken(token) {
+    const statusDiv = document.getElementById('resetPasswordStatus');
+    const form = document.getElementById('resetPasswordForm');
+    
+    statusDiv.innerHTML = `
+        <div class="text-center py-4">
+            <i class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i>
+            <p>Token doğrulanıyor...</p>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/verify-reset-token/${token}`);
+        const data = await response.json();
+        
+        if (response.ok && data.valid) {
+            statusDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Token geçerli! Yeni şifrenizi belirleyebilirsiniz.
+                </div>
+            `;
+            form.classList.remove('d-none');
+            form.dataset.token = token;
+        } else {
+            statusDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-times-circle me-2"></i>
+                    ${data.message || 'Geçersiz veya süresi dolmuş token'}
+                </div>
+                <div class="text-center">
+                    <a href="#" class="btn btn-primary" onclick="showPage('forgotPassword')">
+                        Yeni Sıfırlama Linki Al
+                    </a>
+                </div>
+            `;
+            form.classList.add('d-none');
+        }
+    } catch (error) {
+        statusDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-times-circle me-2"></i>
+                Bağlantı hatası! Lütfen tekrar deneyin.
+            </div>
+        `;
+    }
+}
+
+// Yeni şifre belirleme
+async function handleResetPassword(e) {
+    e.preventDefault();
+    
+    const form = document.getElementById('resetPasswordForm');
+    const token = form.dataset.token;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmNewPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        showAlert('Şifreler eşleşmiyor!', 'danger');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showAlert('Şifre en az 6 karakter olmalıdır!', 'danger');
+        return;
+    }
+    
+    const submitButton = document.getElementById('resetPasswordBtn');
+    const originalText = submitButton.innerHTML;
+    
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Güncelleniyor...';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ token, newPassword })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showAlert(data.message, 'success');
+            form.reset();
+            form.classList.add('d-none');
+            document.getElementById('resetPasswordStatus').innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    ${data.message}
+                </div>
+                <div class="text-center">
+                    <a href="#" class="btn btn-primary" onclick="showPage('login')">
+                        <i class="fas fa-sign-in-alt me-2"></i>Giriş Yap
+                    </a>
+                </div>
+            `;
+            // URL'den token'ı temizle
+            window.location.hash = '';
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    } catch (error) {
+        showAlert('Bağlantı hatası!', 'danger');
+    } finally {
         submitButton.disabled = false;
         submitButton.innerHTML = originalText;
     }

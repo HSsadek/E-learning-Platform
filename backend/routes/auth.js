@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
+const { sendPasswordResetEmail } = require('../utils/email');
 
 const router = express.Router();
 
@@ -168,7 +169,7 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Şifre sıfırlama
+// Şifre sıfırlama talebi - Token gönder
 router.post('/forgot-password', async (req, res) => {
     try {
         const { email } = req.body;
@@ -176,31 +177,121 @@ router.post('/forgot-password', async (req, res) => {
         // Kullanıcıyı bul
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({ message: 'Bu email adresi ile kayıtlı kullanıcı bulunamadı' });
+            // Güvenlik için kullanıcı bulunamasa bile aynı mesajı döndür
+            return res.json({ 
+                message: 'Eğer bu email adresi kayıtlıysa, şifre sıfırlama linki gönderildi.' 
+            });
         }
 
-        // Yeni rastgele şifre oluştur
-        const newPassword = crypto.randomBytes(4).toString('hex'); // 8 karakterlik rastgele şifre
+        // Random token oluştur
+        const resetToken = crypto.randomBytes(32).toString('hex');
         
-        // Şifreyi hashle
-        const hashedPassword = await bcrypt.hash(newPassword, 12);
+        // Token'ı hashleyerek kaydet (güvenlik için)
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
         
-        // Kullanıcının şifresini güncelle
-        user.password = hashedPassword;
+        // Token'ı ve süresini kaydet (1 saat geçerli)
+        user.passwordResetToken = hashedToken;
+        user.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 saat
         await user.save();
 
-        // Gerçek bir uygulamada burada email gönderme servisi kullanılır
-        // Şimdilik console'a yazdırıyoruz ve başarı mesajı dönüyoruz
-        console.log(`Yeni şifre ${email} adresine gönderildi: ${newPassword}`);
+        // Email gönder
+        try {
+            await sendPasswordResetEmail(user.email, resetToken, user.name);
+            console.log(`Şifre sıfırlama linki ${email} adresine gönderildi`);
+            
+            res.json({ 
+                message: 'Şifre sıfırlama linki email adresinize gönderildi. Lütfen email kutunuzu kontrol edin.'
+            });
+        } catch (emailError) {
+            // Email gönderilemezse token'ı temizle
+            user.passwordResetToken = null;
+            user.passwordResetExpires = null;
+            await user.save();
+            
+            console.error('Email gönderme hatası:', emailError);
+            return res.status(500).json({ 
+                message: 'Email gönderilemedi. Lütfen daha sonra tekrar deneyin.' 
+            });
+        }
+    } catch (error) {
+        console.error('Şifre sıfırlama hatası:', error);
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
+// Token doğrulama
+router.get('/verify-reset-token/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
         
-        // Demo amaçlı - gerçek uygulamada şifreyi response'da göndermemelisiniz!
+        // Token'ı hashle
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+        
+        // Token'ı ve süresini kontrol et
+        const user = await User.findOne({
+            passwordResetToken: hashedToken,
+            passwordResetExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ 
+                valid: false,
+                message: 'Geçersiz veya süresi dolmuş token' 
+            });
+        }
+
         res.json({ 
-            message: 'Yeni şifreniz email adresinize gönderildi',
-            // Demo için şifreyi gösteriyoruz - gerçek uygulamada bu olmamalı!
-            temporaryPassword: newPassword,
-            note: 'Demo amaçlı şifre gösteriliyor. Gerçek uygulamada email ile gönderilir.'
+            valid: true,
+            message: 'Token geçerli',
+            email: user.email
         });
     } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
+});
+
+// Yeni şifre belirleme
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({ message: 'Token ve yeni şifre gereklidir' });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: 'Şifre en az 6 karakter olmalıdır' });
+        }
+
+        // Token'ı hashle
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+        
+        // Token'ı ve süresini kontrol et
+        const user = await User.findOne({
+            passwordResetToken: hashedToken,
+            passwordResetExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ 
+                message: 'Geçersiz veya süresi dolmuş token. Lütfen yeni bir şifre sıfırlama talebi oluşturun.' 
+            });
+        }
+
+        // Yeni şifreyi hashle ve kaydet
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+        user.password = hashedPassword;
+        user.passwordResetToken = null;
+        user.passwordResetExpires = null;
+        await user.save();
+
+        console.log(`${user.email} kullanıcısının şifresi başarıyla sıfırlandı`);
+
+        res.json({ 
+            message: 'Şifreniz başarıyla güncellendi. Artık yeni şifrenizle giriş yapabilirsiniz.' 
+        });
+    } catch (error) {
+        console.error('Şifre sıfırlama hatası:', error);
         res.status(500).json({ message: 'Sunucu hatası', error: error.message });
     }
 });
